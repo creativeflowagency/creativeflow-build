@@ -45,7 +45,7 @@
   window.CF_NEW_LOOK = true;
   if (window.CF_NEW_LOOK) document.documentElement.classList.add('cf-v2');
   // Signed in on this device last time: don't flash the welcome screen while the app starts.
-  try { const m = JSON.parse(localStorage.getItem('slate.sync.v1') || 'null'); if (m && m.userId) document.documentElement.classList.add('cf-resume'); } catch (e) {}
+  try { const m = JSON.parse(localStorage.getItem('slate.sync.v1') || 'null'); if ((m && m.userId) || localStorage.getItem('cf.guest') === '1') document.documentElement.classList.add('cf-resume'); } catch (e) {}
   // Inside the iPhone app (Capacitor) the page gets an "ios-app" class: it hides what Apple's rules don't allow there
   // (links to buy a membership elsewhere) and what can't work there (Google sign-in inside an app, offline caching).
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
@@ -442,6 +442,10 @@
   .splash-v2-sub { margin: 0 0 18px; color: #C9C2E0; font-size: 17.5px; line-height: 1.45; font-weight: 600; }
   .splash-v2-ready { margin: 0 0 16px; color: #FFFFFF; font-size: 16.5px; font-weight: 800; }
   .splash-v2 .cf-chunky + .cf-chunky { margin-top: 14px; }
+  /* Try without an account: iPhone app only (Apple asks that the app works without signing up). */
+  .splash-guest-btn { display: none; width: 100%; margin-top: 12px; padding: 10px; background: none; border: none; color: #C9C2E0;
+    font: 700 15.5px 'Helvetica Neue', Helvetica, Arial, sans-serif; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+  html.ios-app .splash-guest-btn { display: block; }
   .splash-v2 .consent-note { margin-top: 16px; text-align: center; }
 
   /* ---------- Setup questions: one per screen ---------- */
@@ -4392,6 +4396,7 @@
       <p class="splash-v2-ready">Ready to create?</p>
       <button type="button" class="cf-chunky primary" id="splashSignUpBtn">Get started</button>
       <button type="button" class="cf-chunky secondary" id="splashSignInBtn">I already have an account</button>
+      <button type="button" class="splash-guest-btn" id="splashGuestBtn">Try without an account</button>
       <p class="consent-note">By continuing you agree to our <button type="button" class="legal-link" data-legal="terms">Terms of Service</button> and <button type="button" class="legal-link" data-legal="privacy">Privacy Policy</button>, and confirm you're 16 or older.</p>
     </div>
   </section>
@@ -11031,7 +11036,7 @@ Give concise, specific, practical feedback grounded in the material above when a
     }
     stage.appendChild(page);
     document.getElementById('obfBar').style.width = ((obfIndex + 1) / steps.length * 100) + '%';
-    document.getElementById('obfBack').classList.toggle('is-hidden', obfIndex === 0 && !state.profile.onboarded);
+    document.getElementById('obfBack').classList.toggle('is-hidden', obfIndex === 0 && !state.profile.onboarded && !(isGuest() && !clerkUserId));
     obfUpdateFoot();
     if (steps[obfIndex] === 'name' && !matchMedia('(pointer: coarse)').matches) setTimeout(() => { const i = page.querySelector('.obf-input'); if (i) i.focus(); }, 460);
   }
@@ -11051,7 +11056,7 @@ Give concise, specific, practical feedback grounded in the material above when a
       } catch (e) {}
     }
     if (delta > 0 && obfIndex >= steps.length - 1) { finishOnboarding(); return; }
-    if (delta < 0 && obfIndex === 0) { if (state.profile.onboarded) switchScreen('home'); return; }
+    if (delta < 0 && obfIndex === 0) { if (state.profile.onboarded) switchScreen('home'); else if (isGuest() && !clerkUserId) switchScreen('splash'); return; }
     save();
     obfIndex += delta;
     obfRender(delta);
@@ -12740,6 +12745,16 @@ Give concise, specific, practical feedback grounded in the material above when a
     return !!(p.onboarded || (p.channelName && p.channelName.trim()) || state.projects.length || state.inbox.length || (p.xp || 0) > 0);
   }
 
+  // Using the app without an account (iPhone app): everything stays on this phone until they sign
+  // up, then it all moves into the new account (sync merges it in).
+  function isGuest() { try { return localStorage.getItem('cf.guest') === '1'; } catch (e) { return false; } }
+  function setGuest(on) { try { if (on) localStorage.setItem('cf.guest', '1'); else localStorage.removeItem('cf.guest'); } catch (e) {} }
+  document.getElementById('splashGuestBtn').addEventListener('click', () => {
+    setGuest(true);
+    if (accountLooksSetUp()) { switchScreen('home'); renderHome(); }
+    else startOnboarding();
+  });
+
   function afterAuthSuccess() {
     if (!state.profile.onboarded && accountLooksSetUp()) { state.profile.onboarded = true; save(); }
     if (state.profile.onboarded) {
@@ -13023,7 +13038,7 @@ Give concise, specific, practical feedback grounded in the material above when a
     if (clerk.user) {
       await startSync(clerk.user.id); // bring in this account's data before choosing a screen
       afterAuthSuccess();
-    } else if (currentScreenName() !== 'splash' && currentScreenName() !== 'auth' && currentScreenName() !== 'legal') {
+    } else if (!isGuest() && currentScreenName() !== 'splash' && currentScreenName() !== 'auth' && currentScreenName() !== 'legal') {
       switchScreen('splash'); // the sign-in expired: back to the welcome screen
     }
     try {
@@ -13040,6 +13055,7 @@ Give concise, specific, practical feedback grounded in the material above when a
       clerkUserId = id;
       syncClerkUserToState();
       if (changed && user) {
+        setGuest(false);
         unmountClerkAuth();
         await startSync(user.id);
         afterAuthSuccess();
@@ -14396,7 +14412,7 @@ Give concise, specific, practical feedback grounded in the material above when a
   renderAccountTopbarIcon();
   renderSplashWelcomeBack();
   renderBurgerSignInOutLabel();
-  if (document.documentElement.classList.contains('cf-resume') && syncMeta.userId && accountLooksSetUp()) switchScreen('home');
+  if (document.documentElement.classList.contains('cf-resume') && (syncMeta.userId || isGuest()) && accountLooksSetUp()) switchScreen('home');
   document.documentElement.classList.remove('cf-resume');
   recheckLicenseInBackground();
   setInterval(recheckLicenseInBackground, LICENSE_RECHECK_HOURS * 60 * 60 * 1000);

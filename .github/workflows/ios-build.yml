@@ -60,6 +60,9 @@ jobs:
           for f in "$APP"/Assets.xcassets/Splash.imageset/*.png; do sips -s format png /tmp/splash.jpg --out "$f" >/dev/null; done
           # Version from package.json, build number from this run (must go up with every upload).
           VERSION=$(node -p "require('./package.json').version")
+          # iPhone only (no iPad version for now).
+          sed -i '' 's/TARGETED_DEVICE_FAMILY = "1,2";/TARGETED_DEVICE_FAMILY = 1;/g; s/TARGETED_DEVICE_FAMILY = 2;/TARGETED_DEVICE_FAMILY = 1;/g' ios/App/App.xcodeproj/project.pbxproj
+          grep -q 'TARGETED_DEVICE_FAMILY' ios/App/App.xcodeproj/project.pbxproj && grep 'TARGETED_DEVICE_FAMILY' ios/App/App.xcodeproj/project.pbxproj | sort -u
           sed -i '' "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $VERSION;/g; s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $((${{ github.run_number }} + 100));/g" ios/App/App.xcodeproj/project.pbxproj
           PL="$APP/Info.plist"
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PL" || /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PL"
