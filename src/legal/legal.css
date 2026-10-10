@@ -2,6 +2,8 @@
 :root {
   --bg: #0A0712; --surface: #0D0A14; --border: #352F44;
   --text: #F5F2FB; --muted: #B3ABC9; --accent: #9B7BFF; --todo: #F0C36A;
+  /* A dark page: without this, iPhone paints the edge of the page (shown inside the app) white. */
+  color-scheme: dark;
 }
 html, body { margin: 0; background: var(--bg); color: var(--text); }
 body {
