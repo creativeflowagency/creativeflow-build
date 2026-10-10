@@ -3920,7 +3920,28 @@
     text-align: center; padding: 6px 16px 0; opacity: 0.85;
   }
   #screen-legal { padding-bottom: 0; }
-  .legal-frame { flex: 1; width: 100%; border: none; background: var(--bg); min-height: 0; color-scheme: dark; }
+  /* The legal text, shown right in the screen (same look as src/legal/legal.css). */
+  .legal-body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 6px 48px; color: var(--text); font-size: 15px; line-height: 1.6; }
+  .legal-body > * { max-width: 720px; margin-left: auto; margin-right: auto; }
+  .legal-body h1 { font-size: 26px; margin-top: 8px; margin-bottom: 4px; }
+  .legal-body h2 { font-size: 17px; margin-top: 28px; margin-bottom: 8px; }
+  .legal-body p, .legal-body li { color: var(--text-muted); }
+  .legal-body strong { color: var(--text); }
+  .legal-body .meta { font-size: 13px; margin-bottom: 20px; }
+  .legal-body a { color: color-mix(in srgb, var(--accent), #FFFFFF 25%); }
+  .legal-body ul { padding-left: 20px; }
+  .legal-body li { margin-bottom: 6px; }
+  .legal-body table { width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 12px; font-size: 13.5px; }
+  .legal-body th, .legal-body td { text-align: left; vertical-align: top; padding: 8px 10px; border: 1px solid var(--border); }
+  .legal-body th { color: var(--text); background: var(--surface); }
+  .legal-body td { color: var(--text-muted); }
+  @media (max-width: 560px) {
+    .legal-body :is(table, thead, tbody, tr, th, td) { display: block; }
+    .legal-body thead { display: none; }
+    .legal-body tr { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; padding: 8px 10px; }
+    .legal-body td { border: none; padding: 2px 0; }
+    .legal-body td:first-child { color: var(--text); font-weight: 700; }
+  }
   .legal-contact { text-align: left; margin-top: 10px; }
   .legal-contact a { color: #B89CFF; }
   .danger-btn { color: var(--danger) !important; }
@@ -5025,7 +5046,7 @@
         <div class="project-title" id="legalTitle">Privacy Policy</div>
       </div>
     </div>
-    <iframe class="legal-frame" id="legalFrame" title="Legal document"></iframe>
+    <div class="legal-body" id="legalBody" role="document"></div>
   </section>
 
   <!-- ANALYTICS -->
@@ -14040,8 +14061,36 @@ Give concise, specific, practical feedback grounded in the material above when a
     if (current !== 'legal') legalReturnTo = current;
     document.querySelectorAll('.sheet-backdrop.active').forEach(s => s.classList.remove('active'));
     document.getElementById('legalTitle').textContent = doc.title;
-    document.getElementById('legalFrame').src = doc.file;
     switchScreen('legal');
+    loadLegal(doc);
+  }
+
+  // Loads the page's text (its <main>) once and shows it in the screen. Links between the two
+  // documents stay in the app; other links open in the browser.
+  const legalCache = {};
+  async function loadLegal(doc) {
+    const body = document.getElementById('legalBody');
+    body.scrollTop = 0;
+    if (!legalCache[doc.file]) {
+      body.innerHTML = '<p class="meta">Loading…</p>';
+      try {
+        const res = await fetch(doc.file, { cache: 'no-cache' });
+        const page = new DOMParser().parseFromString(await res.text(), 'text/html');
+        const main = page.querySelector('main');
+        if (main) legalCache[doc.file] = main.innerHTML;
+      } catch (e) {}
+    }
+    body.innerHTML = legalCache[doc.file]
+      || '<p>Couldn\'t load this page. <a href="https://app.creativeflow.media/' + doc.file + '">Open it in your browser</a>.</p>';
+    body.querySelectorAll('a[href]').forEach(a => {
+      const href = a.getAttribute('href');
+      if (href === 'terms.html' || href === 'privacy.html') {
+        a.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openLegal(href.replace('.html', '')); });
+      } else {
+        a.target = '_blank';
+        a.rel = 'noopener';
+      }
+    });
   }
   document.addEventListener('click', (e) => {
     const trigger = e.target.closest('[data-legal]');
