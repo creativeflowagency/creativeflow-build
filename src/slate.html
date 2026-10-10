@@ -5613,13 +5613,18 @@
   // ---------- Version, what's new, bug reports ----------
   // Keep APP_VERSION in step with "version" in package.json. The desktop app reports its real
   // version itself; this is what the web/phone version shows.
-  const APP_VERSION = '1.0.17';
+  const APP_VERSION = '1.0.18';
   // The iPhone app is the free Basic app until Apple in-app purchases are added: no AI, plans or Max.
   const IOS_FREE = document.documentElement.classList.contains('ios-app');
   window.CF_APP_VERSION = APP_VERSION;
   const REPORT_URL = 'https://creativeflow-ai.netlify.app/api/report';
   // Newest first. Add an entry for every release; only the newest is shown on the Updates & help page.
   const CHANGELOG = [
+    { version: '1.0.18', date: '2026-10-10', changes: [
+      'Opening the app while signed in goes straight to your home screen.',
+      'Signing in no longer asks the setup questions again.',
+      'A cleaner welcome screen, and on phones the bottom bar has Account and the top bar has more room for search.'
+    ] },
     { version: '1.0.17', date: '2026-10-10', changes: [
       'A new welcome screen built around the CreativeFlow logo.',
       'Search is easier to use: it finds videos and ideas, highlights what matches, and stretches across the top on phones.',

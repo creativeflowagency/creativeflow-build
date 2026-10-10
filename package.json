@@ -1,7 +1,7 @@
 {
   "name": "creativeflow-desktop",
   "productName": "CreativeFlow",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "Plan, script, and schedule your content in one place.",
   "author": "CreativeMinds",
   "main": "main.js",
