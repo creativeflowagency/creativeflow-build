@@ -1,0 +1,11 @@
+{
+  "appId": "com.creativeminds.creativeflow",
+  "appName": "CreativeFlow",
+  "webDir": "ios-www",
+  "backgroundColor": "#0A0712",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0A0712",
+    "limitsNavigationsToAppBoundDomains": false
+  }
+}

@@ -1,0 +1,58 @@
+# Builds the signed and notarized Mac app (Developer ID) on a GitHub cloud Mac (free: this repository is public). Started by `npm run release`
+# (scripts/release.js), which then downloads the result and uploads it with the Windows build.
+#
+# Secrets (repo Settings → Secrets and variables → Actions):
+#   MAC_CERT_P12_BASE64  Developer ID Application certificate + key (.p12), base64
+#   MAC_CERT_PASSWORD    password of that .p12
+#   APPLE_API_KEY_P8     App Store Connect API key (.p8 file contents), for notarization
+#   APPLE_API_KEY_ID     its Key ID
+#   APPLE_API_ISSUER     its Issuer ID
+name: Mac build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mac:
+    runs-on: macos-14
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Write the notarization key
+        env:
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+        run: printf '%s' "$APPLE_API_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
+
+      - name: Build, sign and notarize
+        env:
+          CSC_LINK: ${{ secrets.MAC_CERT_P12_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          APPLE_API_KEY: ${{ runner.temp }}/AuthKey.p8
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: npx electron-builder --mac --publish never
+
+      - name: Check the app is signed and notarized
+        run: |
+          app=$(ls -d dist/mac-arm64/*.app | head -1)
+          codesign --verify --deep --strict --verbose=2 "$app"
+          spctl --assess --type execute --verbose=4 "$app"
+          xcrun stapler validate "$app"
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: mac
+          if-no-files-found: error
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/*.blockmap
+            dist/latest-mac.yml

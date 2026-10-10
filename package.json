@@ -1,0 +1,94 @@
+{
+  "name": "creativeflow-desktop",
+  "productName": "CreativeFlow",
+  "version": "1.0.17",
+  "description": "Plan, script, and schedule your content in one place.",
+  "author": "CreativeMinds",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "node scripts/release.js --build-only",
+    "release": "node scripts/release.js",
+    "testflight": "node scripts/testflight.js",
+    "publish-phone-preview": "node scripts/publish-phone-preview.js",
+    "publish-test-zone": "node scripts/publish-test-zone.js",
+    "publish-hq": "node scripts/publish-hq.js",
+    "publish-links": "node scripts/publish-links.js"
+  },
+  "build": {
+    "appId": "com.creativeminds.creativeflow",
+    "productName": "CreativeFlow",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "CreativeFlow",
+      "artifactName": "CreativeFlow-Setup-${version}.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": true,
+      "artifactName": "CreativeFlow-${version}-mac-${arch}.${ext}"
+    },
+    "dmg": {
+      "artifactName": "CreativeFlow-${version}-${arch}.${ext}",
+      "title": "CreativeFlow"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://creativeflow-updates.netlify.app/"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@ebarooni/capacitor-calendar": "^8.8.0",
+    "electron-updater": "^6.8.9"
+  }
+}
