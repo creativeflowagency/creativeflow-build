@@ -58,6 +58,23 @@
     const fitHeight = () => document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px');
     fitHeight();
     window.addEventListener('resize', fitHeight);
+    // The part of the screen above the keyboard: pop-up boxes stay inside it instead of jumping
+    // around while the keyboard opens.
+    const vv = window.visualViewport;
+    if (vv) {
+      const fitVisible = () => {
+        const r = document.documentElement.style;
+        r.setProperty('--vv-h', vv.height + 'px');
+        r.setProperty('--vv-top', vv.offsetTop + 'px');
+        document.documentElement.classList.toggle('kb-open', vv.height < window.innerHeight - 120);
+      };
+      fitVisible();
+      vv.addEventListener('resize', fitVisible);
+      vv.addEventListener('scroll', fitVisible);
+    }
+    const markScrolled = () => { if (document.body) document.body.classList.toggle('page-scrolled', window.scrollY > 2 || (vv && vv.offsetTop > 2)); };
+    window.addEventListener('scroll', markScrolled, { passive: true });
+    if (vv) vv.addEventListener('scroll', markScrolled);
   }
   // The Windows/Mac app (preload.js): Google sign-in can't return to the app there either, so its button is hidden too.
   if (window.creativeflowDesktop) document.documentElement.classList.add('desktop-app');
@@ -3272,6 +3289,17 @@
     z-index: 40;
   }
   .sheet-backdrop.active { display: flex; }
+  /* iPhone app: pop-up boxes sit in the visible part of the screen (above the keyboard) and
+     scroll inside themselves, so they don't jump around while typing. */
+  html.ios-app .sheet-backdrop { inset: auto 0 auto 0; top: var(--vv-top, 0px); height: var(--vv-h, 100%);
+    padding: calc(12px + var(--safe-top, 0px)) 16px 12px; }
+  html.ios-app.kb-open .sheet-backdrop { align-items: flex-end; padding-top: calc(8px + var(--safe-top, 0px)); padding-bottom: 8px; }
+  html.ios-app .sheet-backdrop .sheet { max-height: 100%; }
+  html.ios-app.kb-open .sheet-backdrop.active .sheet { animation: none; }
+  /* A solid strip behind the clock and battery, so pages that scroll up (for example when the
+     keyboard opens) don't slide underneath them. */
+  html.ios-app body.page-scrolled::after { content: ''; position: fixed; top: 0; left: 0; right: 0; height: var(--safe-top, env(safe-area-inset-top));
+    background: var(--bg); z-index: 35; pointer-events: none; }
   .sheet {
     width: 100%;
     max-width: 400px;
@@ -7300,6 +7328,7 @@
     }).join('');
   }
 
+  const lbBlockedHere = new Set(); // profiles blocked on this device this session
   function renderLeaderboard() {
     document.querySelectorAll('.lb-tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.lb === lbPeriod)));
     const list = document.getElementById('lbList');
@@ -7313,7 +7342,8 @@
       return;
     }
     const week = lbPeriod === 'week';
-    const rows = week ? lbData.week : lbData.allTime;
+    // Hide anyone blocked on this device straight away, even if the server's list hasn't caught up.
+    const rows = (week ? lbData.week : lbData.allTime).filter(r => !lbBlockedHere.has(r.pid));
     const you = lbData.you;
     const endDate = new Date(lbData.weekEnds + 'T00:00:00Z');
     const daysLeft = Math.max(0, Math.ceil((endDate - Date.now()) / 86400000));
@@ -7507,6 +7537,7 @@
   async function blockProfile(row, quiet) {
     const r = await leaderboardPost({ action: 'block', pid: row.pid });
     if (r.error) { showToast("Couldn't block them. Try again."); return; }
+    lbBlockedHere.add(row.pid);
     closeLbProfile();
     if (!quiet) showToast((row.name || 'They') + ' is blocked.');
     if (currentScreenName() === 'leaderboard') loadLeaderboard();
@@ -7538,6 +7569,7 @@
         un.disabled = true;
         const r = await leaderboardPost({ action: 'unblock', pid: b.pid });
         if (r.error) { un.disabled = false; showToast("Couldn't unblock. Try again."); return; }
+        lbBlockedHere.delete(b.pid);
         showToast((b.name || 'They') + ' is unblocked.');
         renderBlockedProfiles();
       });
@@ -11646,9 +11678,18 @@ Give concise, specific, practical feedback grounded in the material above when a
   function toggleDailyTask(id) {
     const ct = getTodaysTasks();
     if (ct.done.includes(id)) {
-      ct.done = ct.done.filter(x => x !== id);
-      save();
-      renderDailyTasks();
+      // Ask first: a stray tap on a finished task used to undo it straight away.
+      showConfirm({
+        title: 'Mark as not done?',
+        message: "This task will go back on today's list. You keep the XP you already earned.",
+        confirmLabel: 'Mark as not done',
+        onConfirm: () => {
+          const now = getTodaysTasks();
+          now.done = now.done.filter(x => x !== id);
+          save();
+          renderDailyTasks();
+        }
+      });
       return;
     }
     openTaskProof(id);
@@ -11781,8 +11822,10 @@ Give concise, specific, practical feedback grounded in the material above when a
     body.querySelectorAll('input, textarea').forEach(el => el.addEventListener('input', refresh));
     refresh();
     proofBackdrop.classList.add('active');
+    // On iPhone the keyboard opens when they tap a box: focusing it during the sheet's opening
+    // animation made the keyboard open, close and reopen while the sheet jumped around.
     const first = body.querySelector('input, textarea');
-    if (first) setTimeout(() => first.focus(), 80);
+    if (first && !document.documentElement.classList.contains('ios-app')) setTimeout(() => first.focus(), 80);
   }
 
   function closeTaskProof() {
