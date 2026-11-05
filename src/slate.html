@@ -4692,6 +4692,8 @@
     html.cf-v2.cf-glass #screen-write .doc-page:empty::before, html.cf-v2.cf-glass #screen-write .doc-page.is-empty::before { top: 40px; left: 28px; }
 
     /* Phone view */
+    /* The page fills the whole phone screen, right to the bottom edge, so nothing dark shows behind it. */
+    html.cf-v2.cf-glass #screen-write.mobile-view { position: fixed; inset: 0; z-index: 5; padding: 0; color-scheme: light; }
     html.cf-v2.cf-glass #screen-write.mobile-view, html.cf-glass #screen-write.mobile-view.active { background: #FFFFFF !important; }
     html.cf-v2.cf-glass #screen-write.mobile-view .write-head { background: #FFFFFF; margin: 0; padding: calc(6px + var(--safe-top)) 6px 4px; }
     html.cf-v2.cf-glass #screen-write.mobile-view .write-title { font-size: 16px; font-weight: 400; color: #1F1F1F; }
@@ -5081,10 +5083,6 @@
       <div class="write-head-side">
         <div class="write-pills" id="writeMeta"></div>
         <span class="write-saved" id="writeSaved" aria-live="polite">Saved</span>
-        <button type="button" class="print-layout-btn" id="printLayoutBtn" aria-pressed="false" title="Show the script as A4 pages">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-          Print layout
-        </button>
       </div>
       <button type="button" class="write-share-btn" id="writeShareBtn" aria-label="Share and export" aria-haspopup="menu" aria-expanded="false" aria-controls="writeShareMenu">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
@@ -8405,26 +8403,11 @@
 
   // Phones show the script in "mobile view" unless Print layout is switched on (remembered).
   function scriptMobileView() {
-    let print = false;
-    try { print = localStorage.getItem('cf.printLayout') === '1'; } catch (e) {}
-    return window.matchMedia('(max-width: 600px)').matches && !print;
+    return window.matchMedia('(max-width: 600px)').matches;
   }
   function applyScriptView() {
-    const mobile = scriptMobileView();
-    document.getElementById('screen-write').classList.toggle('mobile-view', mobile);
-    const btn = document.getElementById('printLayoutBtn');
-    btn.setAttribute('aria-pressed', String(!mobile));
+    document.getElementById('screen-write').classList.toggle('mobile-view', scriptMobileView());
   }
-  document.getElementById('printLayoutBtn').addEventListener('click', () => {
-    let print = false;
-    try { print = localStorage.getItem('cf.printLayout') === '1'; localStorage.setItem('cf.printLayout', print ? '0' : '1'); } catch (e) {}
-    applyScriptView();
-    paginateScript();
-    const p = findProject(currentProjectId);
-    if (p) updateScriptMeta(p);
-    showToast(print ? 'Mobile view: text fits your screen.' : 'Print layout: A4 pages, like the exported PDF.');
-  });
-
   function paginateScript() {
     const el = scriptBoxFull;
     if (document.getElementById('screen-write').classList.contains('mobile-view')) {
