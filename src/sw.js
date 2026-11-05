@@ -2,10 +2,11 @@
 // when the local server isn't running. Pages are fetched fresh when the server is
 // up (so edits show immediately) and fall back to the saved copy when it isn't.
 // Clerk and other cross-origin requests are left alone.
-const CACHE = 'slate-v2';
+const CACHE = 'slate-v3';
 const APP_FILES = [
   './slate.html',
   './manifest.webmanifest',
+  './fonts/plus-jakarta-sans-latin-wght-normal.woff2',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',

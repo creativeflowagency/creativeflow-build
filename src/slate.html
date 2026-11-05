@@ -44,6 +44,9 @@
   // Set to false to go back to the previous look; everything for it is in the "cf-v2" CSS layer.
   window.CF_NEW_LOOK = true;
   if (window.CF_NEW_LOOK) document.documentElement.classList.add('cf-v2');
+  // The agency-site style with iPhone-style glass, on top of the look above ("cf-glass" CSS layer).
+  window.CF_GLASS_LOOK = true;
+  if (window.CF_GLASS_LOOK) document.documentElement.classList.add('cf-glass');
   // Signed in on this device last time: don't flash the welcome screen while the app starts.
   try { const m = JSON.parse(localStorage.getItem('slate.sync.v1') || 'null'); if ((m && m.userId) || localStorage.getItem('cf.guest') === '1') document.documentElement.classList.add('cf-resume'); } catch (e) {}
   // Inside the iPhone app (Capacitor) the page gets an "ios-app" class: it hides what Apple's rules don't allow there
@@ -81,7 +84,7 @@
 </script>
 <title>CreativeFlow (Beta)</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0A0712">
+<meta name="theme-color" content="#0E0F13">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2532,9 +2535,11 @@
   }
   .card-body {
     display: flex;
-    gap: 10px;
-    padding: 10px 2px 0;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 10px 14px;
+    align-items: center;
+    text-align: center;
   }
   .card-avatar {
     width: 34px; height: 34px;
@@ -2542,7 +2547,7 @@
     flex-shrink: 0;
     margin-top: 1px;
   }
-  .card-text { min-width: 0; flex: 1; }
+  .card-text { min-width: 0; width: 100%; }
   .card-title {
     font-family: var(--font-body);
     font-weight: 600;
@@ -4120,6 +4125,7 @@
 
     /* Tab screens are top level, so no back arrow; and no duplicate menu entries */
     body.has-tab-bar #dailyQuestsBackBtn,
+    body.has-tab-bar #accountBackBtn,
     body.has-tab-bar #calendarBackBtn,
     body.has-tab-bar #aiBackBtn,
     body.has-tab-bar #aiHomeBtn { display: none; }
@@ -4420,6 +4426,161 @@
   html.cf-v2 #screen-auth .cl-footer { background: transparent !important; border: none !important; }
   html.cf-v2 #screen-auth .cl-footerActionLink { font-weight: 800 !important; }
   html.cf-v2 #screen-auth .cl-otpCodeFieldInput { border-radius: 14px !important; border: 2px solid var(--v2-line) !important; background: var(--v2-card) !important; }
+
+  /* =====================================================================================
+     GLASS LOOK (html.cf-glass): the agency site's style (ink background, Plus Jakarta Sans,
+     thin lines, flat violet buttons) with iPhone-style glass. Real blur is kept to what floats
+     over the page (bottom bar, pop-ups, menus, toasts); lists of cards use a see-through fill
+     without blur so scrolling stays smooth on phones.
+     Set window.CF_GLASS_LOOK = false to get the previous look back.
+     ===================================================================================== */
+  @font-face {
+    font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 200 800; font-display: swap;
+    src: url('fonts/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2-variations');
+  }
+  html.cf-v2.cf-glass {
+    --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    --g-fill: rgba(255, 255, 255, 0.055);
+    --g-fill-hi: rgba(255, 255, 255, 0.10);
+    --g-line: rgba(255, 255, 255, 0.10);
+    --g-line-hi: rgba(255, 255, 255, 0.18);
+    --g-rim: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+    --g-float: 0 22px 50px -16px rgba(0, 0, 0, 0.7);
+    --g-blur: blur(26px) saturate(175%);
+    --g-panel: linear-gradient(160deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.05)), rgba(22, 23, 30, 0.8);
+    --g-lav: #C9C0FF;
+    /* the chunky 3D edges of the previous look go away everywhere at once */
+    --v2-edge: transparent;
+    --v2-accent-edge: transparent;
+    --v2-card: var(--g-fill);
+    --v2-card-hi: var(--g-fill-hi);
+    --v2-line: var(--g-line);
+    --v2-accent-soft: rgba(var(--accent-rgb), 0.18);
+    --v2-radius: 18px;
+    background: var(--bg);
+  }
+
+  /* Background: ink, with one soft violet glow in the corner (like the agency hero). */
+  html.cf-glass body { background: transparent; }
+  html.cf-glass body::before {
+    content: ''; position: fixed; z-index: -1; pointer-events: none; top: -30vmax; right: -30vmax; width: 90vmax; height: 90vmax; border-radius: 50%;
+    background: radial-gradient(circle, rgba(var(--accent-rgb), 0.24), rgba(var(--accent-rgb), 0) 62%);
+  }
+  html.cf-glass .screen.active:not(.splash-v2, #screen-planner, #screen-onboarding) { background: transparent !important; }
+  html.cf-glass :is(#screen-planner, #screen-onboarding) { background: radial-gradient(90vmax 90vmax at 100% 0%, rgba(var(--accent-rgb), 0.22), transparent 62%), #0E0F13; }
+  html.cf-glass #screen-splash.splash-v2 { background: var(--bg); }
+
+  /* Type: the agency's tight, confident headings. */
+  html.cf-glass body, html.cf-glass :is(#screen-onboarding, #screen-onboarding *, #screen-planner, #screen-planner *, #screen-splash, #screen-splash *), html.cf-glass :is(.cf-chunky, .splash-guest-btn, input, textarea, button, select) { font-family: var(--font-body); }
+  html.cf-v2.cf-glass :is(.project-title, .onboard-question, .sheet h3, .splash-v2-title, h1, h2) { font-weight: 800; letter-spacing: -0.035em; }
+  html.cf-glass .splash-v2-title { font-size: clamp(25px, 7vw, 34px); white-space: nowrap; }
+  html.cf-glass .splash-v2-sub { color: var(--text-muted); font-weight: 500; }
+
+  /* Cards: see-through with a bright top edge. */
+  html.cf-v2.cf-glass :is(.card, .script-card, .an-hero, .an-small, .an-highlight, .an-video, .lb-row, .idea-item, .comp-card, .team-row, .max-perk, .plan-option,
+      .plan-card, .customize-card, .account-level-card, .update-card, .lbp-stat, .lbp-badge, .comp-chip, .blocked-row, .settings-body .feature-toggle-row,
+      .license-card, .planner-list-row, .ob-script-row, .folder-card, .quest-card, .quest-bonus-card, .ob-tile) {
+    border: 1px solid var(--g-line); background: var(--g-fill); box-shadow: var(--g-rim);
+  }
+  html.cf-v2.cf-glass .settings-body .feature-toggle-row:last-child { border-bottom: 1px solid var(--g-line); }
+  html.cf-v2.cf-glass :is(.lb-row.you, .plan-option.current, .ob-tile.selected) { border-color: rgba(var(--accent-rgb), 0.75); background: var(--v2-accent-soft); box-shadow: var(--g-rim); }
+  html.cf-v2.cf-glass :is(.card, .script-card, .lb-row, .team-row, .ob-script-row):active { transform: scale(0.985); box-shadow: var(--g-rim); }
+
+  /* Buttons: solid violet for the main action, glass for the rest. Press = a small squeeze. */
+  html.cf-v2.cf-glass :is(.btn-create, .planner-action.solid, .splash-enter-btn, .upgrade-btn:not(.ghost), .plan-option-btn:not(.is-current), .onboard-btn.primary, .lbp-link),
+  html.cf-glass .cf-chunky.primary {
+    border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.16); background: var(--accent); color: var(--accent-ink, #FFFFFF); font-weight: 700;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 26px -12px rgba(var(--accent-rgb), 0.8);
+  }
+  html.cf-v2.cf-glass :is(.btn-cancel, .planner-action:not(.solid), .splash-secondary-btn, .upgrade-btn.ghost, .onboard-btn.secondary, .sheet-btn, .team-x, .comp-actions button, .blocked-row button, .planner-add-row),
+  html.cf-glass .cf-chunky.secondary {
+    border-radius: 14px; border: 1px solid var(--g-line-hi); background: var(--g-fill); color: var(--text); font-weight: 700; box-shadow: var(--g-rim);
+  }
+  html.cf-v2.cf-glass :is(.btn-create, .planner-action, .splash-enter-btn, .upgrade-btn, .plan-option-btn, .onboard-btn, .lbp-link, .btn-cancel, .sheet-btn, .team-x, .planner-add-row):active:not(:disabled),
+  html.cf-glass .cf-chunky:active:not(:disabled) { transform: scale(0.97); }
+  html.cf-glass .cf-chunky:active:not(:disabled) { box-shadow: var(--g-rim); }
+  html.cf-v2.cf-glass :is(.sheet-btn.danger, .sheet-btn.danger-btn, .danger-btn) { color: var(--danger); }
+
+  /* Round icon buttons: little glass circles. */
+  html.cf-v2.cf-glass :is(.back-btn, .icon-btn, .ob-close) {
+    border: 1px solid var(--g-line-hi); background: var(--g-fill-hi); box-shadow: var(--g-rim);
+    -webkit-backdrop-filter: blur(14px) saturate(170%); backdrop-filter: blur(14px) saturate(170%);
+  }
+  html.cf-v2.cf-glass :is(.back-btn, .icon-btn):active { transform: scale(0.92); box-shadow: var(--g-rim); }
+
+  /* Text boxes. */
+  html.cf-v2.cf-glass :is(.onboard-input, .search-wrap input, .sheet input[type="text"], .sheet textarea, .inbox-form input, #aiInput, .team-idea input) {
+    border-radius: 14px; border: 1px solid var(--g-line-hi); background: var(--g-fill); font-weight: 500;
+  }
+  html.cf-v2.cf-glass :is(.onboard-input, .search-wrap input, .sheet input[type="text"], .sheet textarea, .inbox-form input, #aiInput, .team-idea input):focus {
+    border-color: var(--g-lav); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.3);
+  }
+
+  /* Chips and tabs: glass pills; the chosen one is solid violet. */
+  html.cf-v2.cf-glass :is(.chip, .home-seg-btn, .home-format-btn, .lb-tab, .comp-tab, .onboard-option, .reminder-chip, .an-channel-chip) {
+    border: 1px solid var(--g-line-hi); background: var(--g-fill); font-weight: 700; box-shadow: var(--g-rim);
+  }
+  html.cf-v2.cf-glass :is(.chip, .home-seg-btn, .home-format-btn, .lb-tab, .comp-tab, .onboard-option, .reminder-chip, .an-channel-chip):active { transform: scale(0.96); box-shadow: var(--g-rim); }
+  html.cf-v2.cf-glass :is(.chip.active, .home-seg-btn[aria-selected="true"], .home-format-btn[aria-pressed="true"], .lb-tab[aria-selected="true"], .comp-tab[aria-selected="true"],
+      .onboard-option.selected, .onboard-option[aria-pressed="true"], .reminder-chip.active, .reminder-chip[aria-pressed="true"], .an-channel-chip[aria-pressed="true"]) {
+    background: var(--accent); border-color: rgba(255, 255, 255, 0.2); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  }
+  /* Home's Active / Published float over the videos, so they get real glass. */
+  html.cf-glass #screen-home .chip-row .chip:not(.active) { background: var(--g-panel); -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); }
+  html.cf-v2.cf-glass .tab.active { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28); }
+  html.cf-v2.cf-glass .feature-switch { border: 1px solid var(--g-line-hi); background: var(--g-fill-hi); }
+  html.cf-v2.cf-glass .feature-switch.on { background: var(--accent); border-color: rgba(255, 255, 255, 0.2); }
+
+  /* Everything that floats: real glass. */
+  html.cf-glass .sheet-backdrop { background: rgba(6, 6, 9, 0.5); }
+  html.cf-v2.cf-glass :is(.sheet, .burger-menu, .search-dropdown, .lbp-card, .ob-card) {
+    border: 1px solid var(--g-line-hi); background: var(--g-panel); box-shadow: var(--g-rim), var(--g-float);
+    -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur);
+  }
+  html.cf-v2.cf-glass :is(.sheet, .lbp-card, .ob-card) { border-radius: 26px; }
+  html.cf-glass .ob-card { --bg: #14151B; --accent: #6A40F2; --accent-rgb: 106, 64, 242; }
+  html.cf-v2.cf-glass .ai-bubble.assistant { border: 1px solid var(--g-line); background: var(--g-fill); box-shadow: var(--g-rim); }
+  html.cf-glass .app-toast.v2 {
+    border: 1px solid var(--g-line-hi); background: var(--g-panel); box-shadow: var(--g-rim), var(--g-float); border-radius: 22px;
+    -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur);
+  }
+  html.cf-v2.cf-glass .fab-btn { border: 1px solid rgba(255, 255, 255, 0.22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 16px 34px -12px rgba(var(--accent-rgb), 0.8); }
+  html.cf-v2.cf-glass .fab-menu-item { border: 1px solid var(--g-line-hi); background: var(--g-panel); box-shadow: var(--g-rim); -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); }
+  /* The strip behind the clock on iPhone. */
+  html.ios-app.cf-glass body.page-scrolled::after { background: rgba(14, 15, 19, 0.55); -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); }
+
+  /* Phones: the bottom bar is a floating glass capsule, like iOS. */
+  @media (max-width: 699px) {
+    html.cf-v2.cf-glass body.has-tab-bar .tab-bar {
+      left: 12px; right: 12px; bottom: calc(8px + var(--safe-bottom)); padding: 6px; border-radius: 32px;
+      border: 1px solid var(--g-line-hi); background: var(--g-panel); box-shadow: var(--g-rim), var(--g-float);
+      -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur);
+    }
+    html.cf-glass .tab-bar-item { border-radius: 26px; min-height: 50px; font-weight: 600; transition: color 0.2s ease, background 0.2s ease; }
+    html.cf-glass .tab-bar-item:active { background: var(--g-fill-hi); }
+    html.cf-glass .tab-bar-item.active { color: #FFFFFF; background: var(--g-fill-hi); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16); }
+    html.cf-glass .tab-bar-add.active, html.cf-glass .tab-bar-add { background: none; box-shadow: none; }
+    html.cf-glass .tab-bar-add-circle { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 18px -6px rgba(var(--accent-rgb), 0.8); }
+    html.cf-glass body.has-tab-bar .screen.active { padding-bottom: calc(86px + var(--safe-bottom)); }
+    html.cf-glass body.has-tab-bar #screen-ai.active { bottom: calc(var(--tabbar-h, 64px) + 14px + var(--safe-bottom)); padding-bottom: 0; }
+    html.cf-glass body.has-tab-bar #screen-home .chip-row { bottom: calc(76px + var(--safe-bottom)); background: none; }
+    html.cf-glass body.has-tab-bar #screen-home > .grid { padding-bottom: 112px; }
+    html.cf-glass body.has-tab-bar .fab-menu { bottom: calc(92px + var(--safe-bottom)); }
+  }
+  /* Small violet text is hard to read on ink, so it uses the lavender. */
+  html.cf-glass :is(.account-avatar-change, .account-level-text, .quest-xp, .an-link) { color: var(--g-lav); }
+  .account-signin { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .account-signin[hidden], #accountDataBox[hidden] { display: none; }
+  .account-signin .btn-create { width: 100%; padding: 15px 16px; }
+  .account-signin .sheet-btn { margin-bottom: 0; text-align: center; }
+  /* Account page: comfortable width on computers. */
+  #screen-account .settings-body { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
+  /* No blur support: keep floating panels readable. */
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    html.cf-glass { --g-panel: #1B1C24; }
+  }
+
 </style>
 </head>
 <body>
@@ -5031,6 +5192,70 @@
     </div>
   </section>
 
+  <!-- ACCOUNT -->
+  <section class="screen" id="screen-account">
+    <div class="back-row">
+      <button class="back-btn" id="accountBackBtn" aria-label="Back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="project-title-row">
+        <div class="project-title">Account</div>
+      </div>
+    </div>
+    <div class="settings-body">
+
+    <div class="account-avatar-row">
+      <button type="button" class="account-avatar-btn" id="accountAvatarBtn" aria-label="Change profile picture">
+        <img id="accountAvatarImg" src="" alt="" style="display:none;">
+        <svg id="accountAvatarPlaceholder" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+      </button>
+      <input type="file" id="accountAvatarInput" accept="image/*" hidden aria-label="Choose profile picture">
+      <div>
+        <div class="account-avatar-change">Tap to change photo</div>
+        <div class="account-badges" id="accountBadges" hidden></div>
+        <div class="account-status" id="accountStatusText">Not signed in</div>
+        <div class="account-status" id="accountSyncStatus" hidden></div>
+        <div class="account-status app-version-label" id="accountVersion"></div>
+      </div>
+    </div>
+
+    <div class="account-signin" id="accountSignInBox" hidden>
+      <button type="button" class="btn-create" id="accountCreateBtn">Create account</button>
+      <button type="button" class="sheet-btn" id="accountSignInBtn">Sign in</button>
+    </div>
+
+    <div class="account-level-card">
+      <div class="account-level-row">
+        <span class="account-level-text" id="accountLevelText">Level 1</span>
+        <span class="account-level-xp" id="accountLevelXp">0 / 50 XP to next level</span>
+      </div>
+      <div class="account-level-track"><div class="account-level-bar" id="accountLevelBar" style="width:4%;"></div></div>
+    </div>
+
+    <div class="plan-card" id="accountPlanCard">
+      <div class="plan-card-row">
+        <span class="plan-card-name" id="accountPlanName">Basic</span>
+        <button type="button" class="plan-card-link" id="accountPlansBtn">See plans</button>
+      </div>
+      <div class="plan-meter-text" id="accountPlanUses">AI uses this month</div>
+      <div class="account-level-track"><div class="account-level-bar plan-meter-bar" id="accountPlanBar" style="width:0%;"></div></div>
+    </div>
+
+    <button type="button" class="sheet-btn" id="accountLicenseBtn"><svg class="cfi" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8L20 3M16.5 6.5L19 9M14.5 8.5l2 2"/></svg> Enter license key</button>
+    <button type="button" class="sheet-btn" id="accountEditProfileBtn">Edit Profile</button>
+    <button type="button" class="sheet-btn" id="accountRedoSetupBtn">Redo setup questions</button>
+
+    <div class="sheet-section-label">Backup</div>
+    <button type="button" class="sheet-btn" id="backupExportBtn">Export backup file</button>
+    <button type="button" class="sheet-btn" id="backupImportBtn">Import from backup file</button>
+
+    <div id="accountDataBox">
+      <div class="sheet-section-label">Your data</div>
+      <button type="button" class="sheet-btn danger-btn" id="deleteAccountBtn">Delete my account and data</button>
+    </div>
+    </div>
+  </section>
+
   <!-- UPDATES & HELP -->
   <section class="screen" id="screen-updates">
     <div class="back-row">
@@ -5369,7 +5594,7 @@
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 3v3M16 3v3"/></svg>
     <span>Calendar</span>
   </button>
-  <button type="button" class="tab-bar-item tab-bar-account" id="tabBarAccountBtn" aria-label="Account">
+  <button type="button" class="tab-bar-item tab-bar-account" id="tabBarAccountBtn" data-screen="account" aria-label="Account">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20.5c.8-3.9 4-6.5 8-6.5s7.2 2.6 8 6.5"/></svg>
     <span>Account</span>
   </button>
@@ -5415,58 +5640,6 @@
 </div>
 
 <!-- ACCOUNT SHEET -->
-<div class="sheet-backdrop" id="backupSheetBackdrop">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <h3>Account</h3>
-
-    <div class="account-avatar-row">
-      <button type="button" class="account-avatar-btn" id="accountAvatarBtn" aria-label="Change profile picture">
-        <img id="accountAvatarImg" src="" alt="" style="display:none;">
-        <svg id="accountAvatarPlaceholder" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
-      </button>
-      <input type="file" id="accountAvatarInput" accept="image/*" hidden aria-label="Choose profile picture">
-      <div>
-        <div class="account-avatar-change">Tap to change photo</div>
-        <div class="account-badges" id="accountBadges" hidden></div>
-        <div class="account-status" id="accountStatusText">Not signed in</div>
-        <div class="account-status" id="accountSyncStatus" hidden></div>
-        <div class="account-status app-version-label" id="accountVersion"></div>
-      </div>
-    </div>
-
-    <div class="account-level-card">
-      <div class="account-level-row">
-        <span class="account-level-text" id="accountLevelText">Level 1</span>
-        <span class="account-level-xp" id="accountLevelXp">0 / 50 XP to next level</span>
-      </div>
-      <div class="account-level-track"><div class="account-level-bar" id="accountLevelBar" style="width:4%;"></div></div>
-    </div>
-
-    <div class="plan-card" id="accountPlanCard">
-      <div class="plan-card-row">
-        <span class="plan-card-name" id="accountPlanName">Basic</span>
-        <button type="button" class="plan-card-link" id="accountPlansBtn">See plans</button>
-      </div>
-      <div class="plan-meter-text" id="accountPlanUses">AI uses this month</div>
-      <div class="account-level-track"><div class="account-level-bar plan-meter-bar" id="accountPlanBar" style="width:0%;"></div></div>
-    </div>
-
-    <button type="button" class="sheet-btn" id="accountLicenseBtn"><svg class="cfi" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8L20 3M16.5 6.5L19 9M14.5 8.5l2 2"/></svg> Enter license key</button>
-    <button type="button" class="sheet-btn" id="accountEditProfileBtn">Edit Profile</button>
-    <button type="button" class="sheet-btn" id="accountRedoSetupBtn">Redo setup questions</button>
-
-    <div class="sheet-section-label">Backup</div>
-    <button type="button" class="sheet-btn" id="backupExportBtn">Export backup file</button>
-    <button type="button" class="sheet-btn" id="backupImportBtn">Import from backup file</button>
-
-    <div class="sheet-section-label">Your data</div>
-    <button type="button" class="sheet-btn danger-btn" id="deleteAccountBtn">Delete my account and data</button>
-    <div class="sheet-actions" style="margin-top:6px;">
-      <button class="btn-cancel" id="backupCancelBtn">Close</button>
-    </div>
-  </div>
-</div>
 
 <!-- REPORT PROFILE SHEET -->
 <div class="sheet-backdrop" id="reportProfileBackdrop">
@@ -6537,7 +6710,7 @@
       const ideaCount = p.ideas.length;
       const displayTitle = (p.title && p.title.trim()) ? p.title : p.name;
       const short = p.format === 'short';
-      const metaText = `${short ? 'Short · ' : ''}${ideaCount} idea${ideaCount === 1 ? '' : 's'} · ${progress}% ready`;
+      const metaText = `${short ? 'Short' : 'Long'} · ${ideaCount} idea${ideaCount === 1 ? '' : 's'} · ${progress}% ready`;
       card.setAttribute('aria-label', `${displayTitle}, ${progress}% complete`);
 
       const showThumb = p.thumbnail && !short;
@@ -6855,7 +7028,6 @@
   });
 
   // ---------- Account sheet: avatar, sign in/out, backup ----------
-  const backupSheetBackdrop = document.getElementById('backupSheetBackdrop');
 
   function renderAccountTopbarIcon() {
     const img = document.getElementById('accountBtnAvatar');
@@ -6873,6 +7045,10 @@
 
   function renderAccountSheet() {
     renderLevelBadge();
+    // Signed out: offer sign-in here, and there is no account to delete.
+    const signedIn = !!((clerk && clerk.user) || state.currentAccountEmail || syncMeta.userId);
+    document.getElementById('accountSignInBox').hidden = signedIn;
+    document.getElementById('accountDataBox').hidden = !signedIn;
     const avatarImg = document.getElementById('accountAvatarImg');
     const placeholder = document.getElementById('accountAvatarPlaceholder');
     if (state.profile.profilePicture) {
@@ -6901,10 +7077,14 @@
     renderAccountSheet();
     renderPlanBits();
     refreshPlan();
-    backupSheetBackdrop.classList.add('active');
+    document.getElementById('burgerMenu').classList.remove('active');
+    switchScreen('account');
+    window.scrollTo(0, 0);
   });
-  document.getElementById('backupCancelBtn').addEventListener('click', () => backupSheetBackdrop.classList.remove('active'));
-  backupSheetBackdrop.addEventListener('click', (e) => { if (e.target === backupSheetBackdrop) backupSheetBackdrop.classList.remove('active'); });
+  let authFromAccount = false; // Back on the sign-in screen returns to the Account page
+  document.getElementById('accountCreateBtn').addEventListener('click', () => { authFromAccount = true; openClerkAuth('signup'); });
+  document.getElementById('accountSignInBtn').addEventListener('click', () => { authFromAccount = true; openClerkAuth('signin'); });
+  document.getElementById('accountBackBtn').addEventListener('click', () => { renderHome(); switchScreen('home'); });
 
   document.getElementById('accountAvatarBtn').addEventListener('click', () => {
     document.getElementById('accountAvatarInput').click();
@@ -7019,20 +7199,20 @@
   const CUSTOM_LOOK_LEVEL = 8;
   const DEFAULT_LOGO_SRC = document.getElementById('brandLogoImg').getAttribute('src');
   const DEFAULT_TITLE = document.title;
-  const DEFAULT_ACCENT = '#8358FF';
+  const DEFAULT_ACCENT = '#6A40F2';
   const ACCENT_PRESETS = [
     ['Violet', '#8358FF'], ['Blue', '#3D8BFF'], ['Teal', '#14B8A6'], ['Green', '#22C55E'],
     ['Amber', '#F59E0B'], ['Orange', '#F97316'], ['Pink', '#EC4899'], ['Red', '#EF4444']
   ];
   const BG_THEMES = [
-    { key: 'purple', name: 'Purple night', bg: '#0A0712', surface: '#0D0A14', surface2: '#241049', mid: '#150c2e', border: '#352F44' },
+    { key: 'purple', name: 'Ink', bg: '#0E0F13', surface: '#14151B', surface2: '#1E1F29', mid: '#121319', border: '#2C2D37' },
     { key: 'blue', name: 'Midnight blue', bg: '#060A14', surface: '#0A0F1C', surface2: '#10254F', mid: '#0B1730', border: '#2C3548' },
     { key: 'charcoal', name: 'Charcoal', bg: '#0B0B0D', surface: '#111114', surface2: '#26262B', mid: '#17171A', border: '#34343B' },
     { key: 'forest', name: 'Forest', bg: '#050D09', surface: '#08130E', surface2: '#12382A', mid: '#0B2118', border: '#2B3D34' },
     { key: 'crimson', name: 'Crimson', bg: '#0D0508', surface: '#14090D', surface2: '#3D0F1F', mid: '#220912', border: '#44303A' },
     { key: 'ocean', name: 'Ocean', bg: '#040D0F', surface: '#071416', surface2: '#0D3A3F', mid: '#082326', border: '#2A3F42' }
   ];
-  const DEFAULT_FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+  const DEFAULT_FONT = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif";
   const FONT_CHOICES = [
     { key: 'default', name: 'Modern', display: DEFAULT_FONT, body: DEFAULT_FONT },
     { key: 'clean', name: 'Clean', display: "'Segoe UI', system-ui, -apple-system, Roboto, sans-serif", body: "'Segoe UI', system-ui, -apple-system, Roboto, sans-serif" },
@@ -7705,11 +7885,9 @@
   }
 
   document.getElementById('accountEditProfileBtn').addEventListener('click', () => {
-    backupSheetBackdrop.classList.remove('active');
     openEditProfileScreen();
   });
   document.getElementById('accountRedoSetupBtn').addEventListener('click', () => {
-    backupSheetBackdrop.classList.remove('active');
     startOnboarding();
   });
   document.getElementById('editProfileBackBtn').addEventListener('click', () => {
@@ -7796,7 +7974,6 @@
   })();
 
   document.getElementById('backupExportBtn').addEventListener('click', async () => {
-    backupSheetBackdrop.classList.remove('active');
     if (!downloadsApi) {
       showToast("Export isn't available in this view.");
       return;
@@ -7812,7 +7989,6 @@
 
   const importFileInput = document.getElementById('importFileInput');
   document.getElementById('backupImportBtn').addEventListener('click', () => {
-    backupSheetBackdrop.classList.remove('active');
     importFileInput.click();
   });
   importFileInput.addEventListener('change', (e) => {
@@ -10153,6 +10329,7 @@
     document.getElementById('screen-editprofile').classList.toggle('active', name === 'editprofile');
     document.getElementById('screen-dayplanner').classList.toggle('active', name === 'dayplanner');
     document.getElementById('screen-dailyquests').classList.toggle('active', name === 'dailyquests');
+    document.getElementById('screen-account').classList.toggle('active', name === 'account');
     document.getElementById('screen-updates').classList.toggle('active', name === 'updates');
     document.getElementById('screen-legal').classList.toggle('active', name === 'legal');
     // The planner shows the page it was opened from underneath it (kept while it visits the script page).
@@ -10167,7 +10344,7 @@
   }
 
   // ---------- Bottom tab bar (phones; hidden on wider windows by CSS) ----------
-  const TAB_BAR_SCREENS = ['home', 'dailyquests', 'calendar', 'ai'];
+  const TAB_BAR_SCREENS = ['home', 'dailyquests', 'calendar', 'ai', 'account'];
 
   function updateTabBar(name) {
     // A project's own Adonis chat keeps its back arrow instead of the tab bar.
@@ -10208,12 +10385,10 @@
         case 'dailyquests': openDailyQuests(); break;
         case 'calendar': openCalendarScreen(); break;
         case 'ai': openAiChat(null); break;
+        case 'account': document.getElementById('accountBtn').click(); break;
       }
     });
   });
-
-  // iPhone bottom bar: Account opens the Account sheet (same as ☰ → Account).
-  document.getElementById('tabBarAccountBtn').addEventListener('click', () => document.getElementById('accountBtn').click());
 
   document.getElementById('backBtn').addEventListener('click', () => {
     currentProjectId = null;
@@ -13131,7 +13306,10 @@ Give concise, specific, practical feedback grounded in the material above when a
   })();
   clerkReady.catch(e => console.error('CreativeFlow: Clerk failed to load', e));
 
-  document.getElementById('authBackBtn').addEventListener('click', () => switchScreen('splash'));
+  document.getElementById('authBackBtn').addEventListener('click', () => {
+    if (authFromAccount) { authFromAccount = false; document.getElementById('accountBtn').click(); }
+    else switchScreen('splash');
+  });
 
   document.getElementById('splashSignUpBtn').addEventListener('click', () => openClerkAuth('signup'));
   document.getElementById('splashSignInBtn').addEventListener('click', () => openClerkAuth('signin'));
@@ -13683,7 +13861,6 @@ Give concise, specific, practical feedback grounded in the material above when a
   plansBackdrop.addEventListener('click', (e) => { if (e.target === plansBackdrop) plansBackdrop.classList.remove('active'); });
   document.getElementById('accountPlansBtn').addEventListener('click', () => openPlans());
   document.getElementById('accountLicenseBtn').addEventListener('click', () => {
-    backupSheetBackdrop.classList.remove('active');
     licenseReturnTo = null;
     renderLicenseScreen();
     switchScreen('license');
@@ -14160,7 +14337,6 @@ Give concise, specific, practical feedback grounded in the material above when a
   }
 
   document.getElementById('deleteAccountBtn').addEventListener('click', () => {
-    backupSheetBackdrop.classList.remove('active');
     deleteInput.value = '';
     deleteConfirmBtn.disabled = true;
     deleteConfirmBtn.textContent = 'Delete everything';
