@@ -2533,21 +2533,21 @@
     height: 100%;
     background: var(--accent);
   }
+  /* Like a YouTube video: thumbnail on top, then logo with the title and details beside it. */
   .card-body {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 12px 10px 14px;
-    align-items: center;
-    text-align: center;
+    gap: 12px;
+    padding: 12px 4px 4px;
+    align-items: flex-start;
+    text-align: left;
   }
   .card-avatar {
-    width: 34px; height: 34px;
+    width: 36px; height: 36px;
     border-radius: 50%;
     flex-shrink: 0;
-    margin-top: 1px;
+    object-fit: contain;
   }
-  .card-text { min-width: 0; width: 100%; }
+  .card-text { min-width: 0; flex: 1; }
   .card-title {
     font-family: var(--font-body);
     font-weight: 600;
@@ -4467,7 +4467,7 @@
     content: ''; position: fixed; z-index: -1; pointer-events: none; top: -30vmax; right: -30vmax; width: 90vmax; height: 90vmax; border-radius: 50%;
     background: radial-gradient(circle, rgba(var(--accent-rgb), 0.24), rgba(var(--accent-rgb), 0) 62%);
   }
-  html.cf-glass .screen.active:not(.splash-v2, #screen-planner, #screen-onboarding) { background: transparent !important; }
+  html.cf-glass .screen.active:not(.splash-v2, #screen-planner, #screen-onboarding, #screen-write) { background: transparent !important; }
   html.cf-glass :is(#screen-planner, #screen-onboarding) { background: radial-gradient(90vmax 90vmax at 100% 0%, rgba(var(--accent-rgb), 0.22), transparent 62%), #0E0F13; }
   html.cf-glass #screen-splash.splash-v2 { background: var(--bg); }
 
@@ -4574,6 +4574,13 @@
   .account-signin[hidden], #accountDataBox[hidden] { display: none; }
   .account-signin .btn-create { width: 100%; padding: 15px 16px; }
   .account-signin .sheet-btn { margin-bottom: 0; text-align: center; }
+  /* Home filters: both rows are exactly the same width, and each row's buttons share it evenly. */
+  html.cf-v2.cf-glass :is(.home-seg, .home-format) { width: min(100%, 440px); padding: 0; gap: 8px; }
+  html.cf-v2.cf-glass :is(.home-seg-btn, .home-format-btn) { flex: 1 1 0; min-width: 0; padding: 10px 6px; text-align: center; white-space: nowrap; }
+  html.cf-v2.cf-glass .home-format-btn { font-size: 14px; }
+  /* Project cards: everything sits inside the box. */
+  html.cf-v2.cf-glass .card { padding: 10px; overflow: hidden; }
+  html.cf-glass .card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
   /* Account page: comfortable width on computers. */
   #screen-account .settings-body { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
   /* No blur support: keep floating panels readable. */
@@ -4581,6 +4588,140 @@
     html.cf-glass { --g-panel: #1B1C24; }
   }
 
+
+  /* =====================================================================================
+     SCRIPT PAGE: laid out like a word processor (Google Docs). Light, with a white page on grey
+     on computers; a white full-screen page, pencil button and a format bar above the keyboard on phones.
+     ===================================================================================== */
+  #screen-write {
+    --text: #1F1F1F; --text-muted: #444746; --surface: #FFFFFF; --surface-2: #F0F4F9; --border: #DADCE0;
+    --accent: #0B57D0; --accent-rgb: 11, 87, 208; --accent-ink: #FFFFFF;
+    --font-body: Arial, Helvetica, sans-serif; --font-display: Arial, Helvetica, sans-serif;
+    background: #F9FBFD; color: #1F1F1F; font-family: Arial, Helvetica, sans-serif; animation: none !important;
+  }
+  html.cf-glass #screen-write, html.cf-glass #screen-write :is(button, select, input, textarea) { font-family: Arial, Helvetica, sans-serif; }
+  html.cf-glass #screen-write.active { background: #F9FBFD !important; }
+  html.cf-v2.cf-glass #screen-write > .write-glow, html.cf-v2.cf-glass #screen-write .write-progress, html.cf-v2.cf-glass #screen-write .write-eyebrow { display: none; }
+
+  /* Top: back, title, menus, saved, share */
+  html.cf-v2.cf-glass #screen-write .write-head {
+    margin: 0; padding: calc(8px + var(--safe-top)) 16px 2px; gap: 8px; border: none; border-radius: 0; background: #F9FBFD; box-shadow: none;
+    -webkit-backdrop-filter: none; backdrop-filter: none; overflow: visible; flex-wrap: nowrap; animation: none; position: relative; z-index: 12;
+  }
+  html.cf-v2.cf-glass #screen-write .write-back { width: 40px; height: 40px; border: none; border-radius: 50%; background: transparent; color: #444746; flex: none; }
+  html.cf-v2.cf-glass #screen-write .write-back:hover { background: rgba(68, 71, 70, 0.08); }
+  html.cf-v2.cf-glass #screen-write .write-back-done { display: none; }
+  html.cf-v2.cf-glass #screen-write .write-title { color: #1F1F1F; font-size: 18px; font-weight: 400; letter-spacing: 0; line-height: 1.3; }
+  html.cf-v2.cf-glass #screen-write .write-head-side { flex: none; flex-wrap: nowrap; }
+  html.cf-v2.cf-glass #screen-write .write-pill { background: transparent; border: none; color: #444746; font-weight: 400; padding: 0 4px; font-size: 12.5px; }
+  html.cf-v2.cf-glass #screen-write .write-saved { color: #444746; }
+  html.cf-v2.cf-glass #screen-write .write-saved::before { background: #188038; box-shadow: none; }
+  html.cf-v2.cf-glass #screen-write .write-saved.saving::before { background: #F29900; box-shadow: none; }
+  html.cf-v2.cf-glass #screen-write .write-share-btn { background: #C2E7FF; color: #001D35; border: none; border-radius: 999px; font-weight: 500; box-shadow: none; height: 40px; padding: 0 18px; flex: none; }
+  html.cf-v2.cf-glass #screen-write .write-share-btn:hover { background: #B3DCF5; }
+  .write-undo-row { display: none; }
+
+  /* File / Edit / View ... */
+  .docs-menubar { display: flex; gap: 2px; margin: 1px 0 0 -7px; }
+  .docs-menu-btn { border: none; background: transparent; color: #1F1F1F; font-size: 14px; padding: 3px 7px; border-radius: 4px; cursor: pointer; }
+  .docs-menu-btn:hover, .docs-menu-btn[aria-expanded="true"] { background: rgba(68, 71, 70, 0.1); }
+  html.cf-v2.cf-glass #screen-write > .docs-menu { position: fixed; z-index: 60; min-width: 230px; padding: 6px 0; background: #FFFFFF; border-radius: 6px; box-shadow: 0 2px 6px 2px rgba(60, 64, 67, 0.15), 0 1px 2px rgba(60, 64, 67, 0.3); }
+  html.cf-v2.cf-glass #screen-write > .docs-menu[hidden] { display: none; }
+  .docs-menu button { display: flex; justify-content: space-between; gap: 28px; width: 100%; border: none; background: transparent; color: #1F1F1F; font-size: 14px; padding: 7px 18px; text-align: left; cursor: pointer; }
+  .docs-menu button:hover { background: #F1F3F4; }
+  .docs-menu kbd { font: inherit; color: #5F6368; }
+  .docs-menu hr { border: none; border-top: 1px solid #DADCE0; margin: 6px 0; }
+
+  /* Toolbar: one rounded bar */
+  html.cf-v2.cf-glass #screen-write .doc-toolbar {
+    margin: 6px 16px 0; width: auto; max-width: none; align-self: stretch; justify-content: flex-start; padding: 4px 12px; gap: 2px; flex-wrap: nowrap; overflow-x: auto; background: #EDF2FA; border: none; border-radius: 24px;
+    box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; animation: none;
+  }
+  html.cf-v2.cf-glass #screen-write .doc-tool-btn { width: 30px; height: 30px; border-radius: 4px; color: #444746; border: none; }
+  html.cf-v2.cf-glass #screen-write .doc-tool-btn:hover { background: rgba(68, 71, 70, 0.1); color: #1F1F1F; }
+  html.cf-v2.cf-glass #screen-write .doc-tool-btn.active { background: #D3E3FD; color: #0B57D0; border: none; }
+  html.cf-v2.cf-glass #screen-write .doc-toolbar select { height: 30px; background: transparent; border: none; border-radius: 4px; color: #444746; font-size: 13.5px; padding: 0 4px; }
+  html.cf-v2.cf-glass #screen-write .doc-toolbar select:hover { background: rgba(68, 71, 70, 0.1); }
+  html.cf-v2.cf-glass #screen-write .doc-toolbar select option { background: #FFFFFF; color: #1F1F1F; }
+  html.cf-v2.cf-glass #screen-write .doc-toolbar-divider { background: #C7C7C7; height: 20px; margin: 0 5px; }
+  html.cf-v2.cf-glass #screen-write .doc-color-label { height: 30px; background: transparent; border: none; border-radius: 4px; color: #444746; padding: 0 6px; }
+  html.cf-v2.cf-glass #screen-write .doc-color-label:hover { background: rgba(68, 71, 70, 0.1); }
+  html.cf-v2.cf-glass #screen-write .doc-color-text { color: #444746; font-size: 13.5px; }
+  html.cf-v2.cf-glass #screen-write .doc-hooks-btn[aria-expanded="true"] { background: #D3E3FD; border: none; color: #0B57D0; }
+  html.cf-v2.cf-glass #screen-write .doc-hooks-btn[aria-expanded="true"] .doc-color-text { color: #0B57D0; }
+
+  /* Ruler */
+  .doc-ruler { flex: none; height: 22px; margin-top: 6px; padding: 0 14px; background: #F9FBFD; border-bottom: 1px solid #DADCE0; display: flex; justify-content: center; overflow: hidden; }
+  .doc-ruler-in {
+    position: relative; width: 100%; max-width: 794px; height: 100%; background-color: #FFFFFF; color: #5F6368; font-size: 10px;
+    background-image: linear-gradient(to right, #E8EAED 72px, transparent 72px, transparent calc(100% - 72px), #E8EAED calc(100% - 72px)),
+      repeating-linear-gradient(to right, #9AA0A6 0 1px, transparent 1px 12px);
+    background-size: 100% 100%, 100% 5px; background-position: 0 0, 0 100%; background-repeat: no-repeat;
+  }
+  .doc-ruler-in span { position: absolute; top: 3px; transform: translateX(-50%); background: #FFFFFF; padding: 0 2px; line-height: 12px; }
+
+  /* The page */
+  html.cf-v2.cf-glass #screen-write .doc-canvas { background: #F9FBFD; padding: 14px 14px calc(40px + var(--safe-bottom)); }
+  html.cf-v2.cf-glass #screen-write .doc-page {
+    max-width: 794px; padding: 72px; color: #000000; font-family: Arial, Helvetica, sans-serif; border-radius: 0; animation: none !important;
+    background: repeating-linear-gradient(to bottom, #FFFFFF 0, #FFFFFF var(--page-h), transparent var(--page-h), transparent calc(var(--page-h) + var(--page-gap)));
+    filter: drop-shadow(0 0 1px rgba(60, 64, 67, 0.45)) drop-shadow(0 1px 2px rgba(60, 64, 67, 0.15));
+  }
+  html.cf-v2.cf-glass #screen-write .doc-page:empty::before, html.cf-v2.cf-glass #screen-write .doc-page.is-empty::before { top: 72px; left: 72px; }
+  html.cf-v2.cf-glass #screen-write .doc-page::selection, html.cf-v2.cf-glass #screen-write .doc-page *::selection { background: #C2DBFF; }
+
+  html.cf-v2.cf-glass #screen-write .doc-page :is(h1, h2, h3) { font-weight: 700; font-family: Arial, Helvetica, sans-serif; letter-spacing: 0; }
+
+  /* Share menu and hooks panel in the same light style */
+  html.cf-v2.cf-glass #screen-write .write-menu, html.cf-v2.cf-glass #screen-write .write-hooks {
+    background: #FFFFFF; color: #1F1F1F; border: none; border-radius: 8px; box-shadow: 0 2px 6px 2px rgba(60, 64, 67, 0.15), 0 1px 2px rgba(60, 64, 67, 0.3);
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  html.cf-v2.cf-glass #screen-write .write-menu-title, html.cf-v2.cf-glass #screen-write .write-menu-text small, html.cf-v2.cf-glass #screen-write .write-hooks-hint { color: #5F6368; }
+  html.cf-v2.cf-glass #screen-write .write-menu-item { color: #1F1F1F; }
+  html.cf-v2.cf-glass #screen-write .write-menu-item:hover, html.cf-v2.cf-glass #screen-write .write-menu-item:focus-visible { background: #F1F3F4; }
+  html.cf-v2.cf-glass #screen-write .onboard-input { background: #FFFFFF; border: 1px solid #DADCE0; color: #1F1F1F; }
+  html.cf-v2.cf-glass #screen-write .onboard-input:focus { border-color: #0B57D0; }
+
+  @media (max-width: 760px) { #screen-write .write-pills { display: none; } }
+  @media (max-width: 600px) {
+    .docs-menubar, .doc-ruler { display: none; }
+    html.cf-v2.cf-glass #screen-write .write-head { padding: calc(6px + var(--safe-top)) 8px 4px; flex-wrap: nowrap; gap: 4px; }
+    html.cf-v2.cf-glass #screen-write .write-share-btn { width: 40px; padding: 0; background: transparent; color: #444746; }
+    html.cf-v2.cf-glass #screen-write .doc-page { padding: 40px 28px; }
+    html.cf-v2.cf-glass #screen-write .doc-page:empty::before, html.cf-v2.cf-glass #screen-write .doc-page.is-empty::before { top: 40px; left: 28px; }
+
+    /* Phone view */
+    html.cf-v2.cf-glass #screen-write.mobile-view, html.cf-glass #screen-write.mobile-view.active { background: #FFFFFF !important; }
+    html.cf-v2.cf-glass #screen-write.mobile-view .write-head { background: #FFFFFF; margin: 0; padding: calc(6px + var(--safe-top)) 6px 4px; }
+    html.cf-v2.cf-glass #screen-write.mobile-view .write-title { font-size: 16px; font-weight: 400; color: #1F1F1F; }
+    html.cf-v2.cf-glass #screen-write.mobile-view .write-back { width: 42px; height: 42px; }
+    html.cf-v2.cf-glass #screen-write.mobile-view .print-layout-btn, html.cf-v2.cf-glass #screen-write.mobile-view .write-share-btn { color: #444746; background: transparent; }
+    html.cf-v2.cf-glass #screen-write.mobile-view .doc-canvas { background: #FFFFFF; padding: 0; }
+    html.cf-v2.cf-glass #screen-write.mobile-view .doc-page { padding: 18px 20px calc(130px + var(--safe-bottom)); font-size: 16px; line-height: 1.6; background: #FFFFFF; filter: none; }
+    html.cf-v2.cf-glass #screen-write.mobile-view .doc-page:empty::before, html.cf-v2.cf-glass #screen-write.mobile-view .doc-page.is-empty::before { top: 18px; left: 20px; }
+    html.cf-v2.cf-glass #screen-write.mobile-view .write-fab { background: #C2E7FF; color: #001D35; border-radius: 16px; width: 56px; height: 56px; bottom: calc(66px + var(--safe-bottom)); box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3), 0 1px 2px rgba(60, 64, 67, 0.3); }
+    html.cf-v2.cf-glass #screen-write.mobile-view .write-bottom { background: #FFFFFF; border-top: 1px solid #E3E3E3; border-radius: 0; color: #444746; font: 400 13px Arial, Helvetica, sans-serif; padding: 12px 16px calc(12px + var(--safe-bottom)); }
+    html.cf-v2.cf-glass #screen-write.mobile-view .write-bottom-saved { color: #5F6368; font-weight: 400; }
+    html.cf-v2.cf-glass #screen-write.mobile-view .write-bottom-saved::before { background: #188038; }
+
+    /* Phone view, not typing: no format bar. Typing: ✓ and undo/redo on top, format bar above the keyboard. */
+    html.cf-v2.cf-glass #screen-write.mobile-view:not(.editing) .doc-toolbar { display: none; }
+    html.cf-v2.cf-glass #screen-write.mobile-view .doc-toolbar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; margin: 0; width: 100%; border-radius: 0; background: #FFFFFF; border-top: 1px solid #E3E3E3;
+      padding: 6px 8px calc(6px + var(--safe-bottom));
+    }
+    html.ios-app.kb-open #screen-write.mobile-view .doc-toolbar { bottom: auto; top: calc(var(--vv-top, 0px) + var(--vv-h, 100%) - 48px); padding-bottom: 6px; }
+    html.cf-v2.cf-glass #screen-write.mobile-view .doc-tool-btn { width: 36px; height: 36px; }
+    html.cf-v2.cf-glass #screen-write.mobile-view .doc-tool-btn[data-cmd="undo"], html.cf-v2.cf-glass #screen-write.mobile-view .doc-tool-btn[data-cmd="redo"], html.cf-v2.cf-glass #screen-write.mobile-view .doc-toolbar-undo-gap { display: none; }
+    html.cf-v2.cf-glass #screen-write.mobile-view.editing .write-bottom, html.cf-v2.cf-glass #screen-write.mobile-view.editing .print-layout-btn, html.cf-v2.cf-glass #screen-write.mobile-view.editing .write-share-btn { display: none; }
+    html.cf-v2.cf-glass #screen-write.mobile-view.editing .write-undo-row { display: flex; gap: 2px; }
+    .write-undo-row button { width: 42px; height: 42px; border: none; border-radius: 50%; background: transparent; color: #444746; display: flex; align-items: center; justify-content: center; }
+    html.cf-v2.cf-glass #screen-write.mobile-view.editing .write-back-arrow { display: none; }
+    html.cf-v2.cf-glass #screen-write.mobile-view.editing .write-back-done { display: block; color: #0B57D0; }
+    html.cf-v2.cf-glass #screen-write.mobile-view.editing .doc-page { padding-bottom: 50vh; }
+  }
+/*DOCS-END*/
 </style>
 </head>
 <body>
@@ -4925,11 +5066,17 @@
     <div class="write-glow" aria-hidden="true"></div>
     <header class="write-head">
       <button class="write-back" id="writeBackBtn" aria-label="Back">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        <svg class="write-back-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        <svg class="write-back-done" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
       </button>
       <div class="write-head-main">
         <div class="write-eyebrow" id="writeEyebrow">Script</div>
         <div class="write-title" id="writeProjTitle">Script</div>
+        <nav class="docs-menubar" id="docsMenubar" aria-label="Document menus"></nav>
+      </div>
+      <div class="write-undo-row">
+        <button type="button" id="writeUndoBtn" aria-label="Undo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+        <button type="button" id="writeRedoBtn" aria-label="Redo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
       </div>
       <div class="write-head-side">
         <div class="write-pills" id="writeMeta"></div>
@@ -4947,6 +5094,9 @@
     </header>
 
     <div class="doc-toolbar" id="docToolbar">
+      <button type="button" class="doc-tool-btn" data-cmd="undo" aria-label="Undo" title="Undo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+      <button type="button" class="doc-tool-btn" data-cmd="redo" aria-label="Redo" title="Redo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M16 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+      <div class="doc-toolbar-divider doc-toolbar-undo-gap"></div>
       <select id="blockFormatSelect" aria-label="Text style">
         <option value="P">Normal text</option>
         <option value="H1">Heading 1</option>
@@ -4993,6 +5143,8 @@
         <span class="doc-hooks-count" id="writeHooksCount"></span>
       </button>
     </div>
+
+    <div class="doc-ruler" aria-hidden="true"><div class="doc-ruler-in" id="docRulerIn"></div></div>
 
     <div class="write-menu" id="writeShareMenu" role="menu" aria-label="Share and export" hidden>
       <div class="write-menu-title">Share &amp; export</div>
@@ -8368,6 +8520,8 @@
   });
 
   document.getElementById('writeBackBtn').addEventListener('click', () => {
+    const writeScreen = document.getElementById('screen-write');
+    if (writeScreen.classList.contains('mobile-view') && writeScreen.classList.contains('editing')) { scriptBoxFull.blur(); return; }
     if (writeReturnTo === 'planner') {
       writeReturnTo = 'project';
       renderPlanner();
@@ -8384,6 +8538,67 @@
     if (p) renderProjectPlannerBtn(p);
     switchScreen('project');
   });
+
+  // ---------- Menus (File, Edit, ...), the ruler and phone undo/redo ----------
+  (function () {
+    const runCmd = (cmd) => { const b = docToolbar.querySelector('[data-cmd="' + cmd + '"]'); if (b) b.click(); };
+    const exportAs = (kind) => document.querySelector('#writeShareMenu [data-export="' + kind + '"]').click();
+    const blockStyle = (v) => { blockFormatSelect.value = v; blockFormatSelect.dispatchEvent(new Event('change')); };
+    const MENUS = {
+      File: [['Download as PDF', () => exportAs('pdf')], ['Download as Word', () => exportAs('docx')], ['Send', () => exportAs('send')], ['Copy all text', () => exportAs('copy')]],
+      Edit: [['Undo', () => runCmd('undo'), 'Ctrl+Z'], ['Redo', () => runCmd('redo'), 'Ctrl+Y'], null,
+        ['Select all', () => { scriptBoxFull.focus(); document.execCommand('selectAll'); }, 'Ctrl+A']],
+      View: [['Show or hide hooks', () => document.getElementById('hooksToolBtn').click()]],
+      Insert: [['Bulleted list', () => runCmd('insertUnorderedList')], ['Numbered list', () => runCmd('insertOrderedList')]],
+      Format: [['Bold', () => runCmd('bold'), 'Ctrl+B'], ['Italic', () => runCmd('italic'), 'Ctrl+I'], ['Underline', () => runCmd('underline'), 'Ctrl+U'], null,
+        ['Normal text', () => blockStyle('P')], ['Heading 1', () => blockStyle('H1')], ['Heading 2', () => blockStyle('H2')], ['Heading 3', () => blockStyle('H3')], null,
+        ['Align left', () => runCmd('justifyLeft')], ['Align center', () => runCmd('justifyCenter')], ['Align right', () => runCmd('justifyRight')]],
+      Tools: [['Word count', () => showToast(document.getElementById('writeBottomMeta').textContent)]]
+    };
+    const bar = document.getElementById('docsMenubar');
+    const pop = document.createElement('div');
+    pop.className = 'docs-menu'; pop.hidden = true; pop.setAttribute('role', 'menu');
+    document.getElementById('screen-write').appendChild(pop);
+    const closeMenu = () => { pop.hidden = true; bar.querySelectorAll('[aria-expanded]').forEach(b => b.setAttribute('aria-expanded', 'false')); };
+    Object.keys(MENUS).forEach(name => {
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'docs-menu-btn'; btn.textContent = name; btn.setAttribute('aria-expanded', 'false');
+      btn.addEventListener('mousedown', (e) => e.preventDefault()); // keeps the text selection
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wasOpen = btn.getAttribute('aria-expanded') === 'true';
+        closeMenu();
+        if (wasOpen) return;
+        pop.innerHTML = '';
+        MENUS[name].forEach(item => {
+          if (!item) { pop.appendChild(document.createElement('hr')); return; }
+          const row = document.createElement('button');
+          row.type = 'button'; row.setAttribute('role', 'menuitem'); row.textContent = item[0];
+          if (item[2]) { const k = document.createElement('kbd'); k.textContent = item[2]; row.appendChild(k); }
+          row.addEventListener('mousedown', (ev) => ev.preventDefault());
+          row.addEventListener('click', () => { closeMenu(); item[1](); });
+          pop.appendChild(row);
+        });
+        const r = btn.getBoundingClientRect();
+        pop.style.left = r.left + 'px'; pop.style.top = (r.bottom + 2) + 'px';
+        pop.hidden = false; btn.setAttribute('aria-expanded', 'true');
+      });
+      bar.appendChild(btn);
+    });
+    document.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+
+    const ruler = document.getElementById('docRulerIn');
+    for (let i = 1; i <= 7; i++) { const n = document.createElement('span'); n.textContent = i; n.style.left = (72 + i * 96) + 'px'; ruler.appendChild(n); }
+
+    // Tapping a format button keeps the keyboard up; the dropdowns and colour picker still open normally.
+    docToolbar.addEventListener('pointerdown', (e) => { if (!e.target.closest('select, input, label')) e.preventDefault(); });
+    [['writeUndoBtn', 'undo'], ['writeRedoBtn', 'redo']].forEach(([id, cmd]) => {
+      const b = document.getElementById(id);
+      b.addEventListener('pointerdown', (e) => e.preventDefault());
+      b.addEventListener('click', () => runCmd(cmd));
+    });
+  })();
 
   // ---------- Toolbar commands ----------
   docToolbar.querySelectorAll('[data-cmd]').forEach(btn => {
@@ -8930,7 +9145,13 @@
     sel.addRange(range);
   });
   scriptBoxFull.addEventListener('focus', () => document.getElementById('screen-write').classList.add('editing'));
-  scriptBoxFull.addEventListener('blur', () => document.getElementById('screen-write').classList.remove('editing'));
+  scriptBoxFull.addEventListener('blur', () => {
+    // Choosing a text style or colour moves focus to the bar for a moment: still typing.
+    setTimeout(() => {
+      const a = document.activeElement;
+      if (a !== scriptBoxFull && !docToolbar.contains(a)) document.getElementById('screen-write').classList.remove('editing');
+    }, 150);
+  });
 
   function updateScriptMeta(p) {
     const plain = scriptPlainText(p.script);
