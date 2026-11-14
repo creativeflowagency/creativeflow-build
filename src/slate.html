@@ -47,8 +47,9 @@
   // The agency-site style with iPhone-style glass, on top of the look above ("cf-glass" CSS layer).
   window.CF_GLASS_LOOK = true;
   if (window.CF_GLASS_LOOK) document.documentElement.classList.add('cf-glass');
-  // Signed in on this device last time: don't flash the welcome screen while the app starts.
-  try { const m = JSON.parse(localStorage.getItem('slate.sync.v1') || 'null'); if ((m && m.userId) || localStorage.getItem('cf.guest') === '1') document.documentElement.classList.add('cf-resume'); } catch (e) {}
+  // Signed in on this device last time (or the apps hold a saved sign-in): don't show the welcome
+  // screen's buttons until the app knows whether that sign-in still works.
+  try { const m = JSON.parse(localStorage.getItem('slate.sync.v1') || 'null'); if ((m && m.userId) || localStorage.getItem('cf.guest') === '1' || localStorage.getItem('slate.clerkClientToken')) document.documentElement.classList.add('cf-resume'); } catch (e) {}
   // Inside the iPhone app (Capacitor) the page gets an "ios-app" class: it hides what Apple's rules don't allow there
   // (links to buy a membership elsewhere) and what can't work there (Google sign-in inside an app, offline caching).
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
@@ -458,6 +459,7 @@
   .splash-brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; color: #CFC6EE; margin-bottom: 10px; }
   .splash-v2 .splash-logo { width: 28px; height: 28px; border-radius: 8px; margin: 0; }
   .splash-v2 .splash-welcome-back { text-align: left; margin: 0 0 6px; }
+  .splash-v2 .splash-welcome-back small { display: block; margin-top: 2px; font-size: 13px; font-weight: 500; }
   .splash-v2-title { margin: 0 0 12px; color: #FFFFFF; font-size: 34px; line-height: 1.1; font-weight: 900; letter-spacing: -0.02em; }
   .splash-v2-sub { margin: 0 0 18px; color: #C9C2E0; font-size: 17.5px; line-height: 1.45; font-weight: 600; }
   .splash-v2-ready { margin: 0 0 16px; color: #FFFFFF; font-size: 16.5px; font-weight: 800; }
@@ -4038,6 +4040,10 @@
   /* ---------- Bottom tab bar (phones only) ---------- */
   .tab-bar { display: none; }
   html.cf-resume #screen-splash > * { visibility: hidden; }
+  /* Only shows if checking the sign-in takes a while (slow connection). */
+  html.cf-resume #screen-splash::after { content: 'Signing you in…'; position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #A6A3B3; font-size: 15px; font-weight: 600; pointer-events: none; animation: cfResumeHint 0.3s ease 1.2s both; }
+  @keyframes cfResumeHint { from { opacity: 0; } to { opacity: 1; } }
   /* Account only shows in the iPhone app's bottom bar, in Adonis's place (Adonis is hidden there). */
   html:not(.ios-app) #tabBar .tab-bar-account { display: none !important; }
   /* Phones: the calendar is in the bottom bar, so not in the top bar too. */
@@ -4767,6 +4773,11 @@
   .sort-row svg { visibility: hidden; }
   .sort-row[aria-checked="true"] svg { visibility: visible; }
   @media (prefers-reduced-motion: reduce) { .sort-sheet, .sort-sheet-backdrop { transition: none; } }
+
+  /* Welcome back (signed-out account or guest): the greeting takes the title's place, so it never runs into the artwork. */
+  .splash-v2:has(#splashWelcomeBack[style*="block"]) .splash-v2-title { display: none; }
+  .splash-v2 #splashWelcomeBack[style*="block"] { margin: 0 0 12px; color: #FFFFFF; font-size: clamp(24px, 6.6vw, 32px); line-height: 1.15; font-weight: 800; letter-spacing: -0.03em; }
+  .splash-v2 #splashWelcomeBack small { margin-top: 8px; font-size: 16px; font-weight: 600; letter-spacing: 0; color: var(--g-lav, #C9C0FF); }
 </style>
 </head>
 <body>
@@ -6353,9 +6364,15 @@
     img.src = pic;
   }
 
+  let saveFailWarned = false;
   function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-    catch (e) { console.error('CreativeFlow: failed to save', e); }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); saveFailWarned = false; }
+    catch (e) {
+      console.error('CreativeFlow: failed to save', e);
+      // Usually the device's storage for the app is full (big pictures). Say so once, rather than
+      // let the latest changes vanish when the app closes.
+      if (!saveFailWarned) { saveFailWarned = true; setTimeout(() => showToast("Couldn't save on this device: storage is full. Try removing some large pictures."), 0); }
+    }
     if (syncUserId && !syncApplying) scheduleSync();
     if (typeof scheduleRemindersSoon === 'function') scheduleRemindersSoon();
     if (state.profile && (state.profile.avatarSmallKey || '') !== (state.profile.profilePicture ? state.profile.profilePicture.length + ':' + state.profile.profilePicture.slice(-40) : '')) setTimeout(ensureSmallAvatar, 0);
@@ -8418,6 +8435,7 @@
       `;
       row.querySelector('.idea-del').addEventListener('click', () => {
         const proj = findProject(currentProjectId);
+        if (!proj) return;
         proj.ideas = proj.ideas.filter(i => i.id !== idea.id);
         save();
         renderIdeas(proj);
@@ -8433,6 +8451,7 @@
     const text = input.value.trim();
     if (!text) return;
     const p = findProject(currentProjectId);
+    if (!p) { showToast('This video was deleted, maybe on another device.'); renderHome(); switchScreen('home'); return; }
     p.ideas.push({ id: uid(), text });
     save();
     const ideaXp = xpForNextIdeaToday();
@@ -9517,6 +9536,7 @@
       renderHome();
       switchScreen('home');
     }
+    pullIfSignedIn(); // bring in anything another device changed while the planner was open
   }
 
   function renderPlanner() {
@@ -13430,6 +13450,10 @@ Give concise, specific, practical feedback grounded in the material above when a
       return;
     }
     setClerkAuthMessage(null);
+    // The saved sign-in was restored while this was loading: go straight in, no form needed.
+    if (clerk.user) { afterAuthSuccess(); return; }
+    // They went back (or somewhere else) while it loaded.
+    if (currentScreenName() !== 'auth') return;
     const el = document.createElement('div');
     mount.appendChild(el);
     // Virtual routing keeps Clerk's multi-step flow inside this single page; the
@@ -13460,6 +13484,7 @@ Give concise, specific, practical feedback grounded in the material above when a
     renderBurgerSignInOutLabel();
     renderAccountTopbarIcon();
     renderFounderBadge();
+    renderSplashWelcomeBack();
     applyCustomization(); // the founder's unlocks depend on who is signed in
     // A picture uploaded in CreativeFlow wins; otherwise fall back to the Clerk profile image.
     if (clerk && clerk.user && clerk.user.imageUrl && !state.profile.profilePicture) {
@@ -13605,7 +13630,15 @@ Give concise, specific, practical feedback grounded in the material above when a
         afterAuthSuccess();
         refreshPlan();
       } else if (changed && !user) {
+        // Signing out on purpose has already cleared this device's account record; otherwise the
+        // sign-in ended on its own (expired or signed out elsewhere), so say so instead of
+        // leaving the app open with syncing silently stopped.
+        const ended = !!syncMeta.userId;
         stopSync();
+        if (ended && !isGuest() && !['splash', 'auth', 'legal'].includes(currentScreenName())) {
+          switchScreen('splash');
+          showToast('Your sign-in ended. Sign in again to keep syncing.');
+        }
       }
     });
   })();
@@ -13974,11 +14007,33 @@ Give concise, specific, practical feedback grounded in the material above when a
   document.getElementById('ideaBankBackBtn').addEventListener('click', () => switchScreen('home'));
 
 
+  // The welcome screen is the signed-out screen. Someone whose account was signed in on this device
+  // is greeted by name and told to sign in again (with Sign in as the main button); a guest is
+  // greeted and carries on with "Try without an account". Anyone else just sees the welcome.
   function renderSplashWelcomeBack() {
     const el = document.getElementById('splashWelcomeBack');
-    // Signed-in members and guests go straight to Home, so the welcome screen only shows when
-    // they need to sign in: greeting them by name there read as if they were already signed in.
-    el.style.display = 'none';
+    const signedIn = !!(clerk && clerk.user);
+    const accountHere = !!syncMeta.userId && !signedIn;
+    if (state.profile.onboarded && (accountHere || isGuest())) {
+      const name = state.profile.channelName;
+      el.textContent = name ? `Welcome back, ${name}` : 'Welcome back';
+      if (accountHere) {
+        const hint = document.createElement('small');
+        hint.textContent = 'Sign in to pick up where you left off.';
+        el.appendChild(hint);
+      }
+      el.style.display = 'block';
+    } else {
+      el.style.display = 'none';
+    }
+    const signInBtn = document.getElementById('splashSignInBtn');
+    const signUpBtn = document.getElementById('splashSignUpBtn');
+    signInBtn.classList.toggle('primary', accountHere);
+    signInBtn.classList.toggle('secondary', !accountHere);
+    signUpBtn.classList.toggle('primary', !accountHere);
+    signUpBtn.classList.toggle('secondary', accountHere);
+    signInBtn.textContent = accountHere ? 'Sign in' : 'I already have an account';
+    if (accountHere) signUpBtn.before(signInBtn); else signInBtn.before(signUpBtn);
   }
 
   // ---------- Plans: Basic, Creator, Creator Max ----------
@@ -14851,9 +14906,15 @@ Give concise, specific, practical feedback grounded in the material above when a
     return { status: res.status, data: await res.json().catch(() => null) };
   }
 
+  // The planner edits the video it was opened with in place, so another device's changes wait
+  // until it closes: swapping in the merged copy mid-planner would send what's typed next into a
+  // stale copy, and it would be lost. (Closing the planner, focus and the regular check pull again.)
+  function plannerIsOpen() { return document.getElementById('screen-planner').classList.contains('active'); }
+
   // Downloads (when asked) and uploads until this device and the account match.
   async function runSync({ pull = false } = {}) {
     if (!syncUserId) return;
+    if (plannerIsOpen()) pull = false;
     if (syncBusy) {
       syncQueued = { pull: pull || !!(syncQueued && syncQueued.pull) };
       return;
@@ -14866,10 +14927,15 @@ Give concise, specific, practical feedback grounded in the material above when a
         if (r.status !== 200) throw new Error('sync download failed: ' + r.status);
         remote = r.data;
       }
+      let settled = false;
       for (let attempt = 0; attempt < 4; attempt++) {
-        if (remote !== null) { mergeRemote(remote); remote = null; }
+        if (remote !== null) {
+          if (plannerIsOpen()) { settled = true; break; }
+          mergeRemote(remote);
+          remote = null;
+        }
         const local = syncedSnapshot();
-        if (syncMeta.base && sameData(local, syncMeta.base)) break; // nothing new to upload
+        if (syncMeta.base && sameData(local, syncMeta.base)) { settled = true; break; } // nothing new to upload
         const size = JSON.stringify(local).length;
         if (size > SYNC_MAX_CHARS) { syncState.tooLarge = true; throw new Error('sync data too large'); }
         syncState.tooLarge = false;
@@ -14878,11 +14944,14 @@ Give concise, specific, practical feedback grounded in the material above when a
           syncMeta.version = r.data.version;
           syncMeta.base = local;
           saveSyncMeta();
+          settled = true;
           break;
         }
         if (r.status === 409) { remote = r.data || { version: 0, data: null }; continue; } // another device saved first
         throw new Error('sync upload failed: ' + r.status);
       }
+      // Other devices kept saving first: don't claim to be synced (the next change or check retries).
+      if (!settled) throw new Error('sync kept conflicting');
       syncState = { ok: true, at: Date.now(), tooLarge: false };
     } catch (e) {
       console.warn('CreativeFlow: sync did not finish', e);
@@ -14980,8 +15049,18 @@ Give concise, specific, practical feedback grounded in the material above when a
   renderAccountTopbarIcon();
   renderSplashWelcomeBack();
   renderBurgerSignInOutLabel();
-  if (document.documentElement.classList.contains('cf-resume') && (syncMeta.userId || isGuest()) && accountLooksSetUp()) switchScreen('home');
-  document.documentElement.classList.remove('cf-resume');
+  // Signed in here before: open Home straight away (it works offline). Otherwise keep the welcome
+  // screen's buttons hidden until Clerk says whether the saved sign-in still works, so nobody is
+  // asked to sign in while it's being restored.
+  const resuming = document.documentElement.classList.contains('cf-resume');
+  if (resuming && (syncMeta.userId || isGuest()) && accountLooksSetUp()) switchScreen('home');
+  const revealSplash = () => document.documentElement.classList.remove('cf-resume');
+  if (resuming) {
+    clerkReady.then(revealSplash, revealSplash);
+    setTimeout(revealSplash, 20000); // longer than the first sync's wait, in case Clerk hangs
+  } else {
+    revealSplash();
+  }
   recheckLicenseInBackground();
   setInterval(recheckLicenseInBackground, LICENSE_RECHECK_HOURS * 60 * 60 * 1000);
   window.addEventListener('online', recheckLicenseInBackground);

@@ -1,7 +1,7 @@
 // CreativeFlow desktop shell: serves the bundled web app from a fixed local address
 // (so sign-in and saved data keep working between launches) and shows it in
 // its own window.
-const { app, BrowserWindow, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, session } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const http = require('http');
 const fs = require('fs');
@@ -62,6 +62,10 @@ function startServer() {
 
 let win = null;
 
+function flushSavedData() {
+  try { session.defaultSession.flushStorageData(); } catch (e) {}
+}
+
 function createWindow() {
   win = new BrowserWindow({
     width: 1280,
@@ -75,6 +79,9 @@ function createWindow() {
     webPreferences: { contextIsolation: true, nodeIntegration: false, preload: path.join(__dirname, 'preload.js') }
   });
   win.loadURL(`http://127.0.0.1:${PORT}/slate.html`);
+  // The page's saved data (projects and the saved sign-in) is written to disk in batches; write it
+  // now when the window loses focus, so a quit, crash or update right after can't lose it.
+  win.on('blur', flushSavedData);
 
   // Links that open a new window go to the normal browser instead
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -140,5 +147,6 @@ if (!app.requestSingleInstanceLock()) {
     createWindow();
     setUpUpdates();
   });
+  app.on('before-quit', flushSavedData);
   app.on('window-all-closed', () => app.quit());
 }
