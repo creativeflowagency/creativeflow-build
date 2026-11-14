@@ -4578,6 +4578,24 @@
   html.cf-v2.cf-glass :is(.home-seg, .home-format) { width: min(100%, 440px); padding: 0; gap: 8px; }
   html.cf-v2.cf-glass :is(.home-seg-btn, .home-format-btn) { flex: 1 1 0; min-width: 0; padding: 10px 6px; text-align: center; white-space: nowrap; }
   html.cf-v2.cf-glass .home-format-btn { font-size: 14px; }
+  /* Phones: the + menu grows out of the + button and slides in from the right. */
+  @keyframes cfFromPlus { from { opacity: 0; transform: translateX(46px) scale(0.86); } to { opacity: 1; transform: none; } }
+  @media (max-width: 699px) {
+    html.cf-glass body.has-tab-bar .fab-menu { left: auto; right: 14px; transform: none; align-items: flex-end; }
+    html.cf-glass body.has-tab-bar .fab-menu.active .fab-menu-item { transform-origin: right bottom; animation: cfFromPlus 0.32s cubic-bezier(0.2, 0.9, 0.25, 1.15) both; }
+  }
+  /* Phones: the + floats on its own at the bottom right, just above the bottom bar (the bar keeps 4 tabs). */
+  @media (max-width: 699px) {
+    html.cf-glass body.has-tab-bar .tab-bar-add {
+      position: absolute; right: 2px; bottom: calc(100% + 12px); flex: none; width: 58px; height: 58px; min-height: 0; padding: 0; border-radius: 50%; background: none;
+    }
+    html.cf-glass body.has-tab-bar .tab-bar-add-circle { width: 58px; height: 58px; }
+    html.cf-glass body.has-tab-bar .tab-bar-add-circle svg { width: 26px; height: 26px; }
+    html.cf-glass body.has-tab-bar .fab-menu { bottom: calc(162px + var(--safe-bottom)); }
+    html.cf-glass body.has-tab-bar .screen.active { padding-bottom: calc(150px + var(--safe-bottom)); }
+    /* Home: Active / Published leave room for the + on the right. */
+    html.cf-glass body.has-tab-bar #screen-home .chip-row { padding-right: 92px; }
+  }
   /* Project cards: everything sits inside the box. */
   html.cf-v2.cf-glass .card { padding: 10px; overflow: hidden; }
   html.cf-glass .card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
@@ -4724,6 +4742,31 @@
     html.cf-v2.cf-glass #screen-write.mobile-view.editing .doc-page { padding-bottom: 50vh; }
   }
 /*DOCS-END*/
+
+  /* Home: Sort (like YouTube): a plain "Sort" at the top right and a "Sort by" sheet. Replaces the filter rows. */
+  #homeViews, #screen-home .chip.status-chip { display: none !important; }
+  .home-sortbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 20px 12px; position: relative; z-index: 2; }
+  @media (max-width: 699px) { .home-sortbar { padding: 0 16px 12px; } }
+  .home-sort-summary { font-size: 14px; color: #AAAAAA; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .home-sort-btn { display: inline-flex; align-items: center; gap: 6px; flex: none; background: none; border: none; color: #F1F1F1; font: 600 14px var(--font-body); padding: 6px 0; cursor: pointer; }
+  .home-sort-btn:active { opacity: 0.6; }
+  .sort-sheet-backdrop { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, 0); transition: background 0.2s ease; }
+  .sort-sheet-backdrop[hidden] { display: none; }
+  .sort-sheet-backdrop.open { background: rgba(0, 0, 0, 0.6); }
+  .sort-sheet {
+    width: 100%; max-width: 480px; background: #212121; color: #F1F1F1; border-radius: 12px 12px 0 0; padding: 8px 0 calc(16px + var(--safe-bottom));
+    font-family: var(--font-body); transform: translateY(100%); transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.25, 1);
+  }
+  .sort-sheet-backdrop.open .sort-sheet { transform: none; }
+  .sort-handle { width: 40px; height: 4px; border-radius: 2px; background: #5F5F5F; margin: 4px auto 10px; }
+  .sort-title { padding: 4px 20px 6px; font-size: 18px; font-weight: 700; }
+  .sort-head { padding: 14px 20px 6px; font-size: 13px; color: #AAAAAA; }
+  .sort-line { height: 1px; background: #3F3F3F; margin: 8px 0; }
+  .sort-row { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 48px; padding: 0 20px; border: none; background: none; color: #F1F1F1; font: 400 16px var(--font-body); text-align: left; cursor: pointer; }
+  .sort-row:active, .sort-row:hover { background: rgba(255, 255, 255, 0.08); }
+  .sort-row svg { visibility: hidden; }
+  .sort-row[aria-checked="true"] svg { visibility: visible; }
+  @media (prefers-reduced-motion: reduce) { .sort-sheet, .sort-sheet-backdrop { transition: none; } }
 </style>
 </head>
 <body>
@@ -4893,6 +4936,13 @@
     </div>
     <input type="file" id="importFileInput" accept="application/json,.json" hidden aria-label="Import backup file">
 
+    <div class="home-sortbar" id="homeSortBar">
+      <div class="home-sort-summary" id="homeSortSummary">Active · All types</div>
+      <button type="button" class="home-sort-btn" id="homeSortBtn" aria-haspopup="dialog">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+        Sort
+      </button>
+    </div>
     <div class="home-views" id="homeViews">
       <div class="home-seg" role="tablist" aria-label="Show">
         <button type="button" class="home-seg-btn" data-view="all" role="tab">All</button>
@@ -5990,13 +6040,20 @@
   // ---------- Version, what's new, bug reports ----------
   // Keep APP_VERSION in step with "version" in package.json. The desktop app reports its real
   // version itself; this is what the web/phone version shows.
-  const APP_VERSION = '1.0.18';
+  const APP_VERSION = '1.0.19';
   // The iPhone app is the free Basic app until Apple in-app purchases are added: no AI, plans or Max.
   const IOS_FREE = document.documentElement.classList.contains('ios-app');
   window.CF_APP_VERSION = APP_VERSION;
   const REPORT_URL = 'https://creativeflow-ai.netlify.app/api/report';
   // Newest first. Add an entry for every release; only the newest is shown on the Updates & help page.
   const CHANGELOG = [
+    { version: '1.0.19', date: '2026-11-14', changes: [
+      'A new look: a calm dark background, a new font, and frosted-glass menus, pop-ups and bottom bar like the iPhone.',
+      'Your videos look like YouTube: thumbnail on top, then the title and details underneath. One Sort button chooses Active, Published or Playlists and the video type.',
+      'The script page works like Google Docs: menus, toolbar and a white page on computers; a full-screen page with a format bar above the keyboard on phones.',
+      'Account is its own page, with sign-in when you are signed out. On phones the + sits at the bottom right.',
+      'Pop-ups stay steady while you type, and finishing a task asks before you undo it.'
+    ] },
     { version: '1.0.18', date: '2026-10-10', changes: [
       'Opening the app while signed in goes straight to your home screen.',
       'Signing in no longer asks the setup questions again.',
@@ -6594,6 +6651,49 @@
     renderHome();
   }));
   document.getElementById('playlistHeadBack').addEventListener('click', () => { openPlaylistId = null; renderHome(); });
+
+  // ---------- Sort: a "Sort by" sheet (like YouTube's) for what to show and which video type ----------
+  const SORT_SHOW = [['active', 'Active'], ['published', 'Published'], ['playlists', 'Playlists']];
+  const SORT_TYPE = [['all', 'All types'], ['long', 'Long-form'], ['short', 'Shorts']];
+  const SORT_CHECK = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+  const sortSheet = document.createElement('div');
+  sortSheet.className = 'sort-sheet-backdrop';
+  sortSheet.hidden = true;
+  const sortRows = (kind, list) => list.map(([v, label]) => '<button type="button" class="sort-row" role="menuitemradio" data-' + kind + '="' + v + '">' + label + SORT_CHECK + '</button>').join('');
+  sortSheet.innerHTML = '<div class="sort-sheet" role="dialog" aria-label="Sort by"><div class="sort-handle"></div><div class="sort-title">Sort by</div>'
+    + '<div class="sort-head">Show</div>' + sortRows('show', SORT_SHOW) + '<div class="sort-line"></div>'
+    + '<div class="sort-head">Video type</div>' + sortRows('type', SORT_TYPE) + '</div>';
+  document.body.appendChild(sortSheet);
+  const sortShowing = () => homeView === 'playlists' ? 'playlists' : filterMode.type === 'published' ? 'published' : 'active';
+  function renderSortSheet() {
+    const show = sortShowing();
+    sortSheet.querySelectorAll('[data-show]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.show === show)));
+    sortSheet.querySelectorAll('[data-type]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.type === homeFormat)));
+    const showLabel = SORT_SHOW.find(x => x[0] === show)[1], typeLabel = (SORT_TYPE.find(x => x[0] === homeFormat) || SORT_TYPE[0])[1];
+    document.getElementById('homeSortSummary').textContent = show === 'playlists' && !openPlaylistId ? showLabel : showLabel + ' · ' + typeLabel;
+  }
+  const closeSort = () => { sortSheet.classList.remove('open'); setTimeout(() => { if (!sortSheet.classList.contains('open')) sortSheet.hidden = true; }, 220); };
+  document.getElementById('homeSortBtn').addEventListener('click', () => {
+    renderSortSheet();
+    sortSheet.hidden = false;
+    requestAnimationFrame(() => sortSheet.classList.add('open'));
+  });
+  sortSheet.addEventListener('click', (e) => {
+    const row = e.target.closest('.sort-row');
+    if (row && row.dataset.show) {
+      const v = row.dataset.show;
+      openPlaylistId = null;
+      if (v === 'playlists') homeView = 'playlists';
+      else { homeView = 'all'; filterMode = { type: v }; }
+      renderHome();
+    } else if (row && row.dataset.type) {
+      homeFormat = row.dataset.type;
+      try { localStorage.setItem('slate.homeFormat', homeFormat); } catch (e) {}
+      renderHome();
+    } else if (e.target.closest('.sort-sheet')) return; // a tap on the sheet itself, not a row
+    closeSort();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !sortSheet.hidden) closeSort(); });
   document.getElementById('playlistHeadMenu').addEventListener('click', () => { if (openPlaylistId) openPlaylistActions(openPlaylistId); });
 
   // ---------- Playlist ⋮ menu: rename, thumbnail, duplicate, delete ----------
@@ -6706,12 +6806,13 @@
     renderHomeViews();
     renderPlaylistChips();
     renderProjectFeed();
+    renderSortSheet();
   }
 
   function renderPlaylistChips() {
     const row = document.getElementById('playlistChips');
     row.innerHTML = '';
-    row.hidden = homeView === 'playlists' && !openPlaylistId; // the folder list has no Active / Published
+    row.hidden = (homeView === 'playlists' && !openPlaylistId) || !channelFilterOn(); // Active / Published live in Sort; only channel chips stay here
 
     const fixedChips = [
       { type: 'active', label: 'Active' },
@@ -6720,7 +6821,7 @@
     fixedChips.forEach(c => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'chip' + (filterMode.type === c.type ? ' active' : '');
+      btn.className = 'chip status-chip' + (filterMode.type === c.type ? ' active' : '');
       btn.textContent = c.label;
       btn.addEventListener('click', () => { filterMode = { type: c.type }; renderPlaylistChips(); renderProjectFeed(); });
       row.appendChild(btn);
