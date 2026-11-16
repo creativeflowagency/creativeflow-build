@@ -4618,9 +4618,8 @@
   /* Setup steps and planner steps: a short slide and fade instead of whole pages sliding across
      with every option animating on its own, which is too much for the iPhone to keep smooth. */
   html.ios-app .obf-page.entering { animation: obfInLite 0.3s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
-  html.ios-app .obf-page.leaving { animation: obfOutLite 0.2s ease both; }
+  html.ios-app .obf-page.leaving { display: none; } /* the old step goes at once, so the two never overlap */
   @keyframes obfInLite { from { transform: translateX(calc(36px * var(--dir, 1))); opacity: 0; } to { transform: none; opacity: 1; } }
-  @keyframes obfOutLite { from { opacity: 1; } to { transform: translateX(calc(-24px * var(--dir, 1))); opacity: 0; } }
   html.ios-app :is(.obf-opt, .obf-input, .obf-slider-wrap),
   html.ios-app :is(.ob-swap .ob-tile, .ob-swap .planner-list-row, .ob-swap .planner-thumb-slot, .ob-swap .planner-match-row, .ob-swap .ob-reveal) { animation: none; }
   html.ios-app :is(.ob-backdrop, .sheet-backdrop, .sheet, .ob-card),
@@ -11681,6 +11680,27 @@ Give concise, specific, practical feedback grounded in the material above when a
     document.getElementById('obfBack').classList.toggle('is-hidden', obfIndex === 0 && !state.profile.onboarded && !(isGuest() && !clerkUserId));
     obfUpdateFoot();
     if (steps[obfIndex] === 'name' && !matchMedia('(pointer: coarse)').matches) setTimeout(() => { const i = page.querySelector('.obf-input'); if (i) i.focus(); }, 460);
+  }
+
+  // iPhone app: when the keyboard opens in setup or the planner, the phone scrolls the page (and
+  // the step) to show the text box, which pushed the question off the top and made it jump.
+  // Once the keyboard has settled, put them back if the box fits without scrolling.
+  if (document.documentElement.classList.contains('ios-app') && window.visualViewport) {
+    let settleTimer = null;
+    const settleKeyboard = () => {
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => {
+        const a = document.activeElement;
+        if (!a || !/^(INPUT|TEXTAREA)$/.test(a.tagName)) return;
+        const page = a.closest('.obf-page, #plannerBody');
+        if (!page) return;
+        if (window.scrollY) window.scrollTo(0, 0);
+        const top = a.getBoundingClientRect().top - page.getBoundingClientRect().top + page.scrollTop;
+        if (top + a.offsetHeight + 16 <= page.clientHeight) page.scrollTop = 0;
+      }, 120);
+    };
+    window.visualViewport.addEventListener('resize', settleKeyboard);
+    document.addEventListener('focusin', settleKeyboard);
   }
 
   async function obfGo(delta) {
