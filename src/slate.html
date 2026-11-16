@@ -3308,6 +3308,9 @@
      keyboard opens) don't slide underneath them. */
   html.ios-app body.page-scrolled::after { content: ''; position: fixed; top: 0; left: 0; right: 0; height: var(--safe-top, env(safe-area-inset-top));
     background: var(--bg); z-index: 35; pointer-events: none; }
+  /* Sign-in: the keyboard pushes the page up, so the strip is always there (and solid). */
+  html.ios-app body:has(#screen-auth.active)::after { content: ''; position: fixed; top: 0; left: 0; right: 0; height: var(--safe-top, env(safe-area-inset-top));
+    background: #0E0F13 !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; z-index: 70; pointer-events: none; }
   .sheet {
     width: 100%;
     max-width: 400px;
@@ -13552,6 +13555,16 @@ Give concise, specific, practical feedback grounded in the material above when a
     }
     clerkMounted = { mode, el };
   }
+
+  // The "Sign up" / "Sign in" link under the form: switch forms here. Clerk's own link goes to a
+  // web address, which it refuses inside the iPhone app (the page isn't on http/https there).
+  document.getElementById('clerk-auth-mount').addEventListener('click', (e) => {
+    const link = e.target.closest('.cl-footerActionLink');
+    if (!link || !clerkMounted) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openClerkAuth(clerkMounted.mode === 'signin' ? 'signup' : 'signin');
+  }, true);
 
   window.addEventListener('hashchange', () => {
     const hash = window.location.hash;
