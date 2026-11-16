@@ -4607,6 +4607,39 @@
   html.cf-glass .card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
   /* Account page: comfortable width on computers. */
   #screen-account .settings-body { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
+  /* Your plan (license) page: no box around it. */
+  html.cf-v2 #screen-license .license-card, html.cf-v2.cf-glass #screen-license .license-card { border: none; background: none; box-shadow: none; }
+  /* Same top bar as the other pages: back arrow with the title beside it. */
+  #screen-license.active { justify-content: flex-start; padding: 0 0 calc(24px + var(--safe-bottom)); }
+  #screen-license .license-back-row { align-self: stretch; }
+  #screen-license .license-card { margin: 0; padding: 12px 16px 0; }
+  #screen-license .license-message { text-align: left; }
+  /* Account page: a short profile header, then one menu. */
+  #screen-account .account-avatar-row { gap: 14px; margin-bottom: 18px; }
+  #screen-account .account-avatar-wrap { position: relative; flex-shrink: 0; }
+  #screen-account .account-avatar-btn { width: 64px; height: 64px; }
+  #screen-account .account-avatar-cam { position: absolute; right: -2px; bottom: -2px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: var(--accent); color: #FFFFFF; border: 2px solid var(--bg); pointer-events: none; }
+  #screen-account .account-status { font-size: 13px; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #screen-account .account-avatar-info { min-width: 0; }
+  #screen-account .account-level-card { margin-bottom: 14px; }
+  .acct-menu { border: 1px solid var(--border); background: var(--surface); border-radius: 16px; overflow: hidden; margin-bottom: 14px; }
+  html.cf-v2.cf-glass .acct-menu { border: 1px solid var(--g-line); background: var(--g-fill); box-shadow: var(--g-rim); }
+  .acct-row { display: flex; align-items: center; gap: 12px; width: 100%; border: none; background: none; color: var(--text); font: 600 15.5px var(--font-body); text-align: left;
+    padding: 15px 16px; cursor: pointer; }
+  .acct-row + .acct-row, .acct-sub, .acct-sub + .acct-row { border-top: 1px solid var(--border); }
+  html.cf-glass .acct-row + .acct-row, html.cf-glass .acct-sub, html.cf-glass .acct-sub + .acct-row { border-top-color: var(--g-line); }
+  .acct-row:active { background: rgba(127, 127, 127, 0.1); }
+  .acct-row > .cfi:first-child { color: var(--text-muted); flex-shrink: 0; }
+  .acct-row-label { flex: 1; min-width: 0; }
+  .acct-chev { color: var(--text-muted); flex-shrink: 0; transition: transform 0.2s ease; }
+  .acct-row[aria-expanded="true"] .acct-chev { transform: rotate(90deg); }
+  .acct-sub[hidden] { display: none; }
+  .acct-sub .acct-row { padding-left: 46px; font-weight: 500; font-size: 15px; }
+  #screen-account .plan-card { margin-bottom: 14px; }
+  .acct-foot { text-align: center; margin-top: 22px; }
+  .acct-delete { border: none; background: none; color: #FF8A9E; font: 600 14px var(--font-body); padding: 8px 12px; cursor: pointer; }
+  .acct-foot .app-version-label { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
   /* No blur support: keep floating panels readable. */
   @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
     html.cf-glass { --g-panel: #1B1C24; }
@@ -4838,8 +4871,15 @@
 
   <!-- LICENSE (membership required) -->
   <section class="screen" id="screen-license">
+    <div class="back-row license-back-row">
+      <button class="back-btn" id="licenseBackBtn" aria-label="Back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="project-title-row">
+        <div class="project-title">Your plan</div>
+      </div>
+    </div>
     <div class="license-card">
-      <div class="splash-title">Your plan</div>
       <p class="license-message" id="licenseMessage"></p>
       <label class="onboard-field-label" for="licenseKeyInput">License key</label>
       <input type="text" class="onboard-input" id="licenseKeyInput" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false">
@@ -5416,17 +5456,18 @@
     <div class="settings-body">
 
     <div class="account-avatar-row">
-      <button type="button" class="account-avatar-btn" id="accountAvatarBtn" aria-label="Change profile picture">
-        <img id="accountAvatarImg" src="" alt="" style="display:none;">
-        <svg id="accountAvatarPlaceholder" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
-      </button>
+      <div class="account-avatar-wrap">
+        <button type="button" class="account-avatar-btn" id="accountAvatarBtn" aria-label="Change profile picture">
+          <img id="accountAvatarImg" src="" alt="" style="display:none;">
+          <svg id="accountAvatarPlaceholder" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+        </button>
+        <span class="account-avatar-cam" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span>
+      </div>
       <input type="file" id="accountAvatarInput" accept="image/*" hidden aria-label="Choose profile picture">
-      <div>
-        <div class="account-avatar-change">Tap to change photo</div>
+      <div class="account-avatar-info">
         <div class="account-badges" id="accountBadges" hidden></div>
         <div class="account-status" id="accountStatusText">Not signed in</div>
         <div class="account-status" id="accountSyncStatus" hidden></div>
-        <div class="account-status app-version-label" id="accountVersion"></div>
       </div>
     </div>
 
@@ -5452,17 +5493,36 @@
       <div class="account-level-track"><div class="account-level-bar plan-meter-bar" id="accountPlanBar" style="width:0%;"></div></div>
     </div>
 
-    <button type="button" class="sheet-btn" id="accountLicenseBtn"><svg class="cfi" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8L20 3M16.5 6.5L19 9M14.5 8.5l2 2"/></svg> Enter license key</button>
-    <button type="button" class="sheet-btn" id="accountEditProfileBtn">Edit Profile</button>
-    <button type="button" class="sheet-btn" id="accountRedoSetupBtn">Redo setup questions</button>
+    <div class="acct-menu">
+      <button type="button" class="acct-row" id="accountEditProfileBtn">
+        <svg class="cfi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+        <span class="acct-row-label">Edit profile</span>
+      </button>
+      <button type="button" class="acct-row" id="accountRedoSetupBtn">
+        <svg class="cfi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
+        <span class="acct-row-label">Redo setup questions</span>
+      </button>
+      <button type="button" class="acct-row" id="accountBackupToggle" aria-expanded="false" aria-controls="accountBackupSub">
+        <svg class="cfi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg>
+        <span class="acct-row-label">Backup</span>
+        <svg class="acct-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="acct-sub" id="accountBackupSub" hidden>
+        <button type="button" class="acct-row" id="backupExportBtn"><span class="acct-row-label">Export backup file</span></button>
+        <button type="button" class="acct-row" id="backupImportBtn"><span class="acct-row-label">Import from backup file</span></button>
+      </div>
+      <button type="button" class="acct-row" id="accountLicenseBtn">
+        <svg class="cfi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8L20 3M16.5 6.5L19 9M14.5 8.5l2 2"/></svg>
+        <span class="acct-row-label">Enter license key</span>
+        <svg class="acct-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
 
-    <div class="sheet-section-label">Backup</div>
-    <button type="button" class="sheet-btn" id="backupExportBtn">Export backup file</button>
-    <button type="button" class="sheet-btn" id="backupImportBtn">Import from backup file</button>
-
-    <div id="accountDataBox">
-      <div class="sheet-section-label">Your data</div>
-      <button type="button" class="sheet-btn danger-btn" id="deleteAccountBtn">Delete my account and data</button>
+    <div class="acct-foot">
+      <div id="accountDataBox">
+        <button type="button" class="acct-delete" id="deleteAccountBtn">Delete my account and data</button>
+      </div>
+      <div class="app-version-label" id="accountVersion"></div>
     </div>
     </div>
   </section>
@@ -6205,6 +6265,7 @@
   const AI_IMAGE_MAX_EDGE = 1568; // Claude downsizes anything larger anyway
   const LICENSE_OPEN_SCREENS = ['splash', 'auth', 'license', 'legal']; // screens reachable without a membership
   let licenseReturnTo = null;
+  let licenseBackTo = null; // where the Your plan page's back arrow goes
 
   const COLORS =['#3B22D6', '#9B7BFF', '#4B3AC9', '#C77DE0', '#5FA8E8', '#E85C7B'];
 
@@ -10606,6 +10667,7 @@
         switchTab('ai');
         return;
       }
+      if (tab.dataset.tab === 'script') { scriptOpenBtn.click(); return; } // the Script tab opens the script itself
       switchTab(tab.dataset.tab);
     });
   });
@@ -14220,8 +14282,14 @@ Give concise, specific, practical feedback grounded in the material above when a
   });
   plansBackdrop.addEventListener('click', (e) => { if (e.target === plansBackdrop) plansBackdrop.classList.remove('active'); });
   document.getElementById('accountPlansBtn').addEventListener('click', () => openPlans());
+  document.getElementById('accountBackupToggle').addEventListener('click', (e) => {
+    const open = e.currentTarget.getAttribute('aria-expanded') !== 'true';
+    e.currentTarget.setAttribute('aria-expanded', String(open));
+    document.getElementById('accountBackupSub').hidden = !open;
+  });
   document.getElementById('accountLicenseBtn').addEventListener('click', () => {
     licenseReturnTo = null;
+    licenseBackTo = 'account';
     renderLicenseScreen();
     switchScreen('license');
   });
@@ -14397,6 +14465,13 @@ Give concise, specific, practical feedback grounded in the material above when a
     }
   });
   document.getElementById('licenseFreeBtn').addEventListener('click', () => leaveLicenseScreen());
+  // Back: to the Account page when it was opened from there; otherwise the same way out as "Keep using free".
+  document.getElementById('licenseBackBtn').addEventListener('click', () => {
+    const to = licenseBackTo;
+    licenseBackTo = null;
+    if (to === 'account' && licenseReturnTo !== 'onboarding') document.getElementById('accountBtn').click();
+    else leaveLicenseScreen();
+  });
   licenseKeyInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') licenseCheckBtn.click();
   });
