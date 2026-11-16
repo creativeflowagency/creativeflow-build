@@ -1158,7 +1158,7 @@
   :is(#screen-onboarding, #screen-planner) .onboard-progress { display: none; }
   :is(#screen-onboarding, #screen-planner) .onboard-body { padding: 26px 28px 8px; overflow-y: auto; }
   :is(#screen-onboarding, #screen-planner) .onboard-body.ob-swap { animation: obSwap 0.32s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
-  @keyframes obSwap { from { opacity: 0; transform: translateX(calc(26px * var(--ob-dir, 1))); filter: blur(2px); } to { opacity: 1; transform: none; filter: none; } }
+  @keyframes obSwap { from { opacity: 0; transform: translateX(calc(26px * var(--ob-dir, 1))); } to { opacity: 1; transform: none; } }
   /* Tiles and rows ease in one after another when a new step appears. */
   .ob-swap .ob-tile, .ob-swap .planner-list-row, .ob-swap .planner-thumb-slot, .ob-swap .planner-match-row, .ob-swap .ob-reveal {
     animation: obItemIn 0.42s cubic-bezier(0.2, 0.9, 0.25, 1) both;
@@ -3300,9 +3300,10 @@
      scroll inside themselves, so they don't jump around while typing. */
   html.ios-app .sheet-backdrop { inset: auto 0 auto 0; top: var(--vv-top, 0px); height: var(--vv-h, 100%);
     padding: calc(12px + var(--safe-top, 0px)) 16px 12px; }
-  html.ios-app.kb-open .sheet-backdrop { align-items: flex-end; padding-top: calc(8px + var(--safe-top, 0px)); padding-bottom: 8px; }
+  /* They always sit at the bottom, so they don't jump from the middle when the keyboard opens. */
+  html.ios-app .sheet-backdrop { align-items: flex-end; padding-bottom: calc(12px + var(--safe-bottom, 0px)); }
+  html.ios-app.kb-open .sheet-backdrop { padding-top: calc(8px + var(--safe-top, 0px)); padding-bottom: 8px; }
   html.ios-app .sheet-backdrop .sheet { max-height: 100%; }
-  html.ios-app.kb-open .sheet-backdrop.active .sheet { animation: none; }
   /* A solid strip behind the clock and battery, so pages that scroll up (for example when the
      keyboard opens) don't slide underneath them. */
   html.ios-app body.page-scrolled::after { content: ''; position: fixed; top: 0; left: 0; right: 0; height: var(--safe-top, env(safe-area-inset-top));
@@ -4607,6 +4608,29 @@
   html.cf-glass .card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
   /* Account page: comfortable width on computers. */
   #screen-account .settings-body { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
+  /* iPhone app: setup, the planner and pop-ups.
+     Blur that sits on top of something moving makes the iPhone stutter and flash, so here the
+     floating boxes are solid and the background glow stands still. */
+  html.ios-app .ob-backdrop span { animation: none; }
+  /* Setup steps and planner steps: a short slide and fade instead of whole pages sliding across
+     with every option animating on its own, which is too much for the iPhone to keep smooth. */
+  html.ios-app .obf-page.entering { animation: obfInLite 0.3s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
+  html.ios-app .obf-page.leaving { animation: obfOutLite 0.2s ease both; }
+  @keyframes obfInLite { from { transform: translateX(calc(36px * var(--dir, 1))); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes obfOutLite { from { opacity: 1; } to { transform: translateX(calc(-24px * var(--dir, 1))); opacity: 0; } }
+  html.ios-app :is(.obf-opt, .obf-input, .obf-slider-wrap),
+  html.ios-app :is(.ob-swap .ob-tile, .ob-swap .planner-list-row, .ob-swap .planner-thumb-slot, .ob-swap .planner-match-row, .ob-swap .ob-reveal) { animation: none; }
+  html.ios-app :is(.ob-backdrop, .sheet-backdrop, .sheet, .ob-card),
+  html.ios-app .ob-backdrop::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  html.ios-app #screen-planner.has-underlay .ob-backdrop::after { background: rgba(6, 6, 9, 0.8); }
+  html.ios-app .sheet-backdrop { background: rgba(6, 6, 9, 0.72) !important; }
+  html.ios-app.cf-glass :is(.sheet, .ob-card) { background: #1B1C24; }
+  html.ios-app .sheet-backdrop.active .sheet { animation-name: cfFadeIn; }
+  /* Setup and the planner fill the part of the screen above the keyboard, so the card stays in
+     view instead of sliding behind the keyboard or under the clock. */
+  html.ios-app :is(#screen-onboarding, #screen-planner).active { position: fixed; left: 0; right: 0; bottom: auto; top: var(--vv-top, 0px); height: var(--vv-h, 100%); z-index: 60; }
+  html.ios-app.kb-open :is(#screen-onboarding, #screen-planner).active { padding-top: calc(8px + var(--safe-top, 0px)); padding-bottom: 8px; }
+  html.ios-app :is(#screen-onboarding, #screen-planner) .ob-card { max-height: 100%; }
   /* Your plan (license) page: no box around it. */
   html.cf-v2 #screen-license .license-card, html.cf-v2.cf-glass #screen-license .license-card { border: none; background: none; box-shadow: none; }
   /* Same top bar as the other pages: back arrow with the title beside it. */
